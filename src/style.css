@@ -1,0 +1,431 @@
+:root {
+  --bg: #0f0f13;
+  --panel: #18181f;
+  --panel-2: #22222b;
+  --border: #2e2e3a;
+  --text: #e8e8ee;
+  --muted: #9a9aab;
+  --accent: #f0b43c;
+  --danger: #e0564a;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  overscroll-behavior: none;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+button,
+select,
+input,
+.btn {
+  font: inherit;
+  color: inherit;
+}
+
+button,
+select,
+.btn {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  min-height: 34px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:hover,
+select:hover,
+.btn:hover {
+  border-color: #4a4a5c;
+}
+
+button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a1a1a;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ---- Top bar ---- */
+
+#topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brush,
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+#wind-val {
+  min-width: 3.5ch;
+}
+
+.brush input {
+  width: 100px;
+  accent-color: var(--accent);
+}
+
+#brush-val,
+#wind-val {
+  min-width: 2ch;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.check input {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+}
+
+/* The HUD only takes the space that's left on the line and never causes a
+   wrap: a changing text length would otherwise change the stage height,
+   re-fit the canvas and make everything flicker. */
+#hud {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  min-height: 1.4em; /* same height whether there's text yet or not */
+}
+
+#hud > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#stats {
+  flex-shrink: 0;
+}
+
+#hover {
+  color: var(--text);
+  flex-shrink: 1;
+}
+
+/* ---- Stage ---- */
+
+#stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  overflow: hidden;
+}
+
+#canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #141418;
+  border: 1px solid var(--border);
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* ---- Toolbar ---- */
+
+#toolbar {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 8px 16px 10px;
+}
+
+#tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 6px;
+}
+
+#tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tab.active {
+  background: var(--panel-2);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+#palette {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  /* room for the outline of the selected button + a thin scrollbar */
+  padding: 4px 4px 8px;
+  margin: -4px -4px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+#palette::-webkit-scrollbar {
+  height: 6px;
+}
+
+#palette::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.el {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-width: 88px;
+  font-weight: 600;
+  text-shadow: none;
+  border: 2px solid rgba(0, 0, 0, 0.35);
+}
+
+.el.active {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+#desc {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  min-height: 1.4em;
+}
+
+/* ---- Dialog ---- */
+
+dialog {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  width: min(480px, calc(100vw - 32px));
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.dlg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.dlg-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.row input[type='text'] {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+button.danger {
+  color: var(--danger);
+}
+
+#save-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  max-height: 40vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+#save-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+#save-list li:last-child {
+  border-bottom: none;
+}
+
+#save-list li.empty {
+  color: var(--muted);
+}
+
+.slot-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-date {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#save-msg {
+  min-height: 1.4em;
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
+#save-msg.error {
+  color: var(--danger);
+}
+
+/* ---- Mobile ---- */
+
+@media (max-width: 720px) {
+  #topbar {
+    padding: 6px 16px;
+    gap: 6px 10px;
+  }
+
+  .brand {
+    display: none;
+  }
+
+  .brush input {
+    width: 80px;
+  }
+
+  #hud {
+    flex: 1 0 100%;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  #stage {
+    padding: 4px;
+  }
+
+  #toolbar {
+    padding: 6px 0 8px;
+  }
+
+  #tabs {
+    padding: 0 16px 6px;
+  }
+
+  #palette {
+    margin: 0;
+    padding: 4px 16px;
+    scrollbar-width: none;
+  }
+
+  #palette::-webkit-scrollbar {
+    display: none;
+  }
+
+  .el {
+    min-height: 40px;
+  }
+
+  #desc {
+    padding: 0 16px;
+    font-size: 12px;
+  }
+}
+
+/* ---- Scenes dialog ---- */
+
+dialog h3 {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.demo-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

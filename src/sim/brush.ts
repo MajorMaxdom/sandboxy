@@ -1,0 +1,131 @@
+import { P, ID } from '../elements/registry';
+import { CHARGE_MAX } from '../elements/props';
+import type { Simulation } from './simulation';
+
+export type Tool =
+  | { kind: 'element'; id: number }
+  | { kind: 'erase' }
+  | { kind: 'heat' }
+  | { kind: 'cool' }
+  | { kind: 'toggle' };
+
+export interface BrushOptions {
+  radius: number;
+  /** Paint over existing particles instead of only into empty cells. */
+  replace: boolean;
+  /** Fill every cell (shapes) instead of the speckled spray of loose stuff. */
+  solid?: boolean;
+}
+
+export function paintCircle(sim: Simulation, cx: number, cy: number, tool: Tool, opt: BrushOptions): void {
+  const r = Math.max(0, Math.round(opt.radius));
+  const r2 = r * r + r; // slightly rounder circles at small radii
+  const { w, type, temp, rng } = sim;
+
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      if (dx * dx + dy * dy > r2) continue;
+      const x = cx + dx;
+      const y = cy + dy;
+      if (!sim.inBounds(x, y)) continue;
+      const j = y * w + x;
+      const t = type[j];
+
+      switch (tool.kind) {
+        case 'element': {
+          const id = tool.id;
+          if (id === ID.spark && P.conducts[t]) {
+            if (sim.charge[j] === 0) sim.charge[j] = CHARGE_MAX;
+            break;
+          }
+          if (t === id) break;
+          if (t !== 0 && !opt.replace) break;
+          if (!opt.solid && rng.next() > P.paintChance[id]) break;
+          sim.spawn(j, id);
+          break;
+        }
+        case 'erase':
+          if (t !== 0) sim.spawn(j, 0);
+          break;
+        case 'heat':
+          temp[j] = Math.min(temp[j] + 12, 9000);
+          break;
+        case 'cool':
+          temp[j] = Math.max(temp[j] - 12, -273);
+          break;
+        case 'toggle':
+          if (t === ID.switch) {
+            sim.life[j] = sim.life[j] ? 0 : 1;
+            sim.wake(j);
+          }
+          break;
+      }
+    }
+  }
+}
+
+/** Paint along a line so fast strokes don't leave gaps. */
+export function paintLine(
+  sim: Simulation,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  tool: Tool,
+  opt: BrushOptions,
+): void {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const dist = Math.max(Math.abs(dx), Math.abs(dy));
+  const step = Math.max(1, Math.floor(opt.radius / 2));
+  const n = Math.max(1, Math.ceil(dist / step));
+  for (let s = 0; s <= n; s++) {
+    const t = n === 0 ? 0 : s / n;
+    paintCircle(sim, Math.round(x0 + dx * t), Math.round(y0 + dy * t), tool, opt);
+  }
+}
+
+/** Filled rectangle between two corners. */
+export function paintRect(
+  sim: Simulation,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  tool: Tool,
+  opt: BrushOptions,
+): void {
+  const one = { ...opt, radius: 0 };
+  for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
+    for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) paintCircle(sim, x, y, tool, one);
+  }
+}
+
+/**
+ * Flood fill: apply the tool to the connected area of the same element as
+ * the clicked cell (e.g. all the empty space inside a container).
+ */
+export function floodFill(sim: Simulation, x: number, y: number, tool: Tool, opt: BrushOptions): number {
+  if (!sim.inBounds(x, y)) return 0;
+  const { w, h, type } = sim;
+  const target = type[y * w + x];
+  if (tool.kind === 'element' && tool.id === target) return 0;
+  const seen = new Uint8Array(sim.size);
+  const queue = new Int32Array(sim.size);
+  let head = 0;
+  let tail = 0;
+  queue[tail++] = y * w + x;
+  seen[y * w + x] = 1;
+  const one = { ...opt, radius: 0, replace: true, solid: true };
+  while (head < tail) {
+    const i = queue[head++];
+    const cx = i % w;
+    const cy = (i - cx) / w;
+    paintCircle(sim, cx, cy, tool, one);
+    if (cx > 0 && !seen[i - 1] && type[i - 1] === target) { seen[i - 1] = 1; queue[tail++] = i - 1; }
+    if (cx < w - 1 && !seen[i + 1] && type[i + 1] === target) { seen[i + 1] = 1; queue[tail++] = i + 1; }
+    if (cy > 0 && !seen[i - w] && type[i - w] === target) { seen[i - w] = 1; queue[tail++] = i - w; }
+    if (cy < h - 1 && !seen[i + w] && type[i + w] === target) { seen[i + w] = 1; queue[tail++] = i + w; }
+  }
+  return tail;
+}

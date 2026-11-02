@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f0f13" />
+    <title>Sandboxy</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect width='8' height='8' fill='%23141418'/%3E%3Cpath fill='%23e3c47a' d='M3 1h1v1H3zM2 4h1v1H2zM4 3h1v1H4zM1 6h6v1H1zM2 5h4v1H2zM3 4h2v1H3z'/%3E%3Cpath fill='%232f6fd6' d='M0 7h8v1H0z'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <div id="app">
+      <header id="topbar">
+        <div class="brand">Sandboxy</div>
+        <div class="group">
+          <button id="btn-play" type="button" title="Pause (Leertaste)">⏸</button>
+          <button id="btn-step" type="button" title="Einzelschritt (.)">⏭</button>
+          <select id="sel-speed" title="Geschwindigkeit">
+            <option value="0.25">0,25×</option>
+            <option value="0.5">0,5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+            <option value="4">4×</option>
+          </select>
+        </div>
+        <div class="group">
+          <label class="brush" title="Pinselgröße ([ und ])">
+            Pinsel <input id="rng-brush" type="range" min="0" max="20" value="3" />
+            <span id="brush-val">3</span>
+          </label>
+          <label class="brush" title="Größe eines Partikels auf dem Bildschirm (+ und −). Kleiner = mehr Platz.">
+            Pixel
+            <select id="sel-pixel">
+              <option value="auto">Auto</option>
+              <option value="1">1 px</option>
+              <option value="2">2 px</option>
+              <option value="3">3 px</option>
+              <option value="4">4 px</option>
+              <option value="5">5 px</option>
+              <option value="6">6 px</option>
+              <option value="8">8 px</option>
+              <option value="10">10 px</option>
+              <option value="12">12 px</option>
+            </select>
+          </label>
+          <label class="brush" title="Globaler Wind (Pfeiltasten ← →)">
+            Wind <input id="rng-wind" type="range" min="-5" max="5" step="1" value="0" />
+            <span id="wind-val">0</span>
+          </label>
+          <label class="check" title="Bestehende Partikel übermalen">
+            <input id="chk-replace" type="checkbox" /> Übermalen
+          </label>
+        </div>
+        <div class="group">
+          <select id="sel-shape" title="Werkzeugform: Freihand (F), Linie (L), Rechteck (R), Füllen (G), Pipette (I)">
+            <option value="free">✎ Freihand</option>
+            <option value="line">╱ Linie</option>
+            <option value="rect">▭ Rechteck</option>
+            <option value="fill">▧ Füllen</option>
+            <option value="pick">⊙ Pipette</option>
+          </select>
+          <button id="btn-undo" type="button" title="Rückgängig (Strg/⌘+Z)">↶</button>
+          <button id="btn-redo" type="button" title="Wiederholen (Strg/⌘+Umschalt+Z)">↷</button>
+          <select id="sel-view" title="Ansicht: Wärmebild (H), Druck (P)">
+            <option value="normal">Normal</option>
+            <option value="heat">Wärmebild</option>
+            <option value="pressure">Druck</option>
+          </select>
+          <button id="btn-clear" type="button">Leeren</button>
+          <button id="btn-saves" type="button">Szenen</button>
+        </div>
+        <div id="hud">
+          <span id="hover"></span>
+          <span id="stats"></span>
+        </div>
+      </header>
+
+      <main id="stage">
+        <canvas id="canvas" aria-label="Sandbox-Spielfläche"></canvas>
+      </main>
+
+      <nav id="toolbar">
+        <div id="tabs" role="tablist"></div>
+        <div id="palette"></div>
+        <div id="desc"></div>
+      </nav>
+    </div>
+
+    <dialog id="dlg-saves">
+      <form method="dialog" class="dlg-head">
+        <h2>Szenen</h2>
+        <button value="close" aria-label="Schließen">✕</button>
+      </form>
+      <h3>Demos</h3>
+      <div id="demo-list" class="demo-list"></div>
+      <h3>Teilen</h3>
+      <div class="row">
+        <button id="btn-share" type="button" class="primary">Link zur aktuellen Szene kopieren</button>
+      </div>
+      <h3>Gespeicherte Szenen</h3>
+      <div class="row">
+        <input id="save-name" type="text" placeholder="Name der Szene" maxlength="40" />
+        <button id="btn-save-slot" type="button" class="primary">Speichern</button>
+      </div>
+      <ul id="save-list"></ul>
+      <div class="row">
+        <button id="btn-export" type="button">Als Datei exportieren</button>
+        <label class="btn">
+          Datei importieren
+          <input id="file-import" type="file" accept=".json,application/json" hidden />
+        </label>
+      </div>
+      <p id="save-msg" role="status"></p>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
