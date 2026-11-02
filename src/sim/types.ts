@@ -120,9 +120,29 @@ export interface ElementDef {
   calm?: boolean;
   /**
    * Extra setting chosen in the toolbar and stored in `life` when painted:
-   * 'color' = RGB565 color (lasers), 'element' = element id (firework filling).
+   * 'color' = RGB565 color (lasers, filters, portal channels),
+   * 'element' = element id (firework filling, converter, faucet).
    */
   option?: 'color' | 'element';
+  /** 'color' options: draw the cell in a darker version of its color (portal exits). */
+  dimOwnColor?: boolean;
+  /** Elements sharing this key share the chosen value (all lasers, both portal ends). */
+  optionKey?: string;
+  /** Toolbar label of the option (default "Farbe" / "Element"). */
+  optionLabel?: string;
+  /** Initial value: a hex color or an element key. */
+  optionDefault?: string;
+  /** 'element' options: label for "no element" (life 0); without it, one must be chosen. */
+  optionNone?: string;
+
+  /**
+   * What a laser beam does when it reaches this cell. Default: it's absorbed
+   * and heats the cell. 'pass' = see-through, 'mirror/' and 'mirror\' turn
+   * it by 90°, 'filter' lets through only its own color (stored in life).
+   */
+  light?: 'pass' | 'mirror/' | 'mirror\\' | 'filter';
+  /** Called when a beam is absorbed here, instead of heating (sensors, solar cells). */
+  onLight?: (sim: Simulation, i: number, x: number, y: number) => void;
 
   /** Flickers when rendered. */
   glow?: boolean;

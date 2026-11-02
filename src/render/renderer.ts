@@ -1,7 +1,6 @@
 import { P, packColor } from '../elements/registry';
-import { CHARGE_MAX, GAS } from '../elements/props';
-import { ID } from '../elements/ids';
-import { DEFAULT_LASER, rgb565Lut } from '../elements/color';
+import { CHARGE_MAX, GAS, LIGHT_PASS, LIGHT_FILTER } from '../elements/props';
+import { rgb565Lut } from '../elements/color';
 import type { Simulation } from '../sim/simulation';
 
 export type ViewMode = 'normal' | 'heat' | 'pressure';
@@ -118,17 +117,20 @@ export class Renderer {
       const ownColor = P.ownColor;
       const life = sim.life;
       const own = rgb565Lut();
+      const ownDim = rgb565Lut(0.5);
+      const defaultParam = P.defaultParam;
       const state = P.state;
-      const glass = ID.glass;
+      const light = P.light;
       for (let i = 0; i < size; i++) {
         const id = type[i];
         const c = charge[i];
         const b = beam[i];
         if (b !== 0) {
-          // Laser light: pure over empty space, mixed into gas and glass.
-          buf[i] = id === 0 ? b : state[id] === GAS || id === glass ? mix(colors[id * 4 + (shade[i] & 3)], b) : colors[id * 4 + (shade[i] & 3)];
+          // Laser light: pure over empty space, mixed into gas, glass and filters.
+          const base = ownColor[id] ? (ownColor[id] === 2 ? ownDim : own)[life[i] || defaultParam[id]] : colors[id * 4 + (shade[i] & 3)];
+          buf[i] = id === 0 ? b : state[id] === GAS || light[id] === LIGHT_PASS || light[id] === LIGHT_FILTER ? mix(base, b) : base;
         } else if (ownColor[id]) {
-          buf[i] = own[life[i] || DEFAULT_LASER];
+          buf[i] = (ownColor[id] === 2 ? ownDim : own)[life[i] || defaultParam[id]];
         } else if (c > 0 && id !== 0 && !lightsUp[id]) {
           buf[i] = c >= CHARGE_MAX - 2 ? CHARGE_COLOR : CHARGE_DIM;
         } else if (glow[id]) {

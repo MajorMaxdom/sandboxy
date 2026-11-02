@@ -17,6 +17,10 @@ const above = (sim: Simulation, x: number, y: number) => (y > 0 ? (y - 1) * sim.
 const below = (sim: Simulation, x: number, y: number) => (y < sim.h - 1 ? (y + 1) * sim.w + x : -1);
 
 const OFF = '#2a2f36';
+/** XOR: ticks a pulse waits for the other input before it counts. */
+const XOR_WINDOW = 10;
+/** Light sensor: flag in `life` set by a laser hitting it. */
+const LIT = 0x100;
 
 function part(def: Omit<ElementDef, 'category' | 'state' | 'density' | 'logic'>): ElementDef {
   return { category: 'logic', state: 'static', density: 2500, logic: true, conductivity: 0.2, ...def };
@@ -158,5 +162,83 @@ export const logic: ElementDef[] = [
       sim.life[i] = top | (bottom << 8);
     },
     description: 'Gibt rechts einen Impuls aus, wenn oben UND unten (fast) gleichzeitig Strom ankommt.',
+  }),
+  part({
+    key: 'or gate',
+    label: 'ODER-Gatter →',
+    color: ['#2a333f', '#2a333f', '#7ab8ff', '#2a333f'],
+    update(sim, i, x, y) {
+      const on = fresh(sim, above(sim, x, y)) || fresh(sim, below(sim, x, y));
+      if (on) signal(sim, rightOf(sim, x, y));
+      if (on) sim.life[i] = 4;
+      else if (sim.life[i] > 0) sim.life[i]--;
+      sim.shade[i] = sim.life[i] > 0 ? 2 : 0;
+    },
+    description: 'Gibt rechts einen Impuls aus, wenn oben ODER unten Strom ankommt.',
+  }),
+  part({
+    key: 'xor gate',
+    label: 'XOR-Gatter →',
+    color: ['#3a3326', '#3a3326', '#ffb86b', '#3a3326'],
+    update(sim, i, x, y) {
+      // life: low byte = waiting timer of the top input, high byte = bottom.
+      // A pulse waits XOR_WINDOW ticks; if the other input fires meanwhile, both cancel.
+      let top = sim.life[i] & 255;
+      let bottom = sim.life[i] >> 8;
+      const ft = fresh(sim, above(sim, x, y));
+      const fb = fresh(sim, below(sim, x, y));
+      let out = false;
+      if (ft && fb) {
+        top = 0;
+        bottom = 0;
+      } else if (ft) {
+        if (bottom > 0) bottom = top = 0;
+        else top = XOR_WINDOW;
+      } else if (fb) {
+        if (top > 0) bottom = top = 0;
+        else bottom = XOR_WINDOW;
+      } else {
+        if (top > 0 && --top === 0) out = true;
+        if (bottom > 0 && --bottom === 0) out = true;
+      }
+      if (out) signal(sim, rightOf(sim, x, y));
+      sim.shade[i] = out ? 2 : 0;
+      sim.life[i] = top | (bottom << 8);
+    },
+    description: 'Gibt rechts einen Impuls aus, wenn oben ODER unten Strom ankommt, aber nicht beide (kurz verzögert).',
+  }),
+  part({
+    key: 'flipflop',
+    label: 'Flipflop →',
+    color: ['#2f2a3a', '#2f2a3a', '#d6a6ff', '#2f2a3a'],
+    update(sim, i, x, y) {
+      // life bit 0: on/off. A pulse from the left toggles it; while on, it powers the right.
+      if (fresh(sim, leftOf(sim, x, y))) sim.life[i] ^= 1;
+      const on = (sim.life[i] & 1) === 1;
+      if (on && sim.tick % 8 === 0) signal(sim, rightOf(sim, x, y));
+      sim.shade[i] = on ? 2 : 0;
+    },
+    description: 'Speichert einen Zustand: Jeder Impuls von links schaltet ihn um. Solange er an ist, gibt er rechts Strom aus.',
+  }),
+  part({
+    key: 'light sensor',
+    label: 'Lichtsensor',
+    color: ['#22303a', '#22303a', '#7df9ff', '#22303a'],
+    onLight(sim, i) {
+      sim.life[i] |= LIT;
+    },
+    update(sim, i, x, y) {
+      // LIT is set by lasers each tick they hit; the low byte is a cooldown.
+      const lit = (sim.life[i] & LIT) !== 0;
+      let cool = sim.life[i] & 255;
+      if (cool > 0) cool--;
+      else if (lit) {
+        pulse(sim, x, y);
+        cool = 8;
+      }
+      sim.life[i] = cool;
+      sim.shade[i] = lit ? 2 : 0;
+    },
+    description: 'Gibt Stromimpulse ab, solange ein Laserstrahl ihn trifft. Für Lichtschranken.',
   }),
 ];

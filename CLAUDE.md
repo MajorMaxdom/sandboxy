@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 107 Tests, alle grün
+npm test             # Vitest, aktuell 136 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.
@@ -27,8 +27,11 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 
 ## Konventionen und Stolperfallen
 - **Doppelt belegte Felder:** `life` ist Lebensdauer, Wachstumsbudget, Schalterzustand, Klon-ID, Kritikalität, Laserfarbe (RGB565), Feuerwerk-Füllung (Element-ID; bei der Rakete ab Bit 6, darunter Flugzeit) usw. Element-IDs in `life` müssen in `deserialize` umgemappt werden.
-- **Elementoptionen:** `ElementDef.option` ('color' | 'element') zeigt in der Werkzeugleiste ein Steuerelement; der Wert reist als `Tool.param` mit und landet beim Malen in `life`.
-- **Laserlicht** ist keine Materie: Laser schreiben jeden Tick in `sim.beam` (gepackte Pixelfarbe), der Renderer malt das über leere Zellen, Gas und Glas. Der Strom-Haltezähler des Lasers liegt in `shade`-Bits 2–7.
+- **Elementoptionen:** `ElementDef.option` ('color' | 'element') zeigt in der Werkzeugleiste ein Steuerelement (`optionLabel`, `optionDefault`, `optionNone`, gemeinsamer Wert über `optionKey`). Der Wert reist als `Tool.param` mit und landet beim Malen in `life`. Ist `life` 0, gilt `P.defaultParam`. Element-IDs in `life` (`P.lifeIsElement`) werden beim Laden umgemappt.
+- **Laserlicht** ist keine Materie: Laser schreiben jeden Tick über `traceBeam()` (tech.ts) in `sim.beam`. Was der Strahl an einer Zelle tut, steht in `ElementDef.light` ('pass', 'mirror/', 'mirror\\', 'filter'); sonst wird er absorbiert und heizt, oder `onLight` wird aufgerufen (Solarzelle, Lichtsensor). Der Strom-Haltezähler von Laser und Wasserhahn liegt in `shade`-Bits 2–7 (`poweredOrUnwired`).
+- **Portale:** Ausgänge tragen sich jeden Tick in `sim.portalExitsNext` ein, Eingänge lesen im nächsten Tick `sim.portalExits`. Der Kanal ist die Farbe in `life`.
+- **Wachsendes mit `calm: true`** (Gras, Moos, Algen, Konverter) hält seinen Chunk nur per `sim.wake(i)` wach, solange es noch Arbeit hat, damit fertige Wiesen schlafen.
+- **Brennen:** `burn()` prüft Nachbarn auf CO₂ (erstickt) und Sauerstoff (schneller und heißer, wird langsam verbraucht).
 - **Höhe der Werkzeugleiste fix halten:** Ändert sie sich (z. B. durch umbrechenden Beschreibungstext), schrumpft die Bühne und das Raster wird neu angelegt. Deshalb hat `#desc-row` eine feste Höhe.
 - **`calm: true`** an einem Element mit `update` verhindert, dass es seinen Chunk dauerhaft wach hält (z. B. Feuerwerk, das nur auf Hitze wartet). `shade` speichert bei Strahlung die **Flugrichtung 0–7**, deshalb rendert der Renderer mit `shade & 3`, und `clear()` setzt `shade` zurück.
 - **Signale von Logik-Bausteinen** setzen `charge = CHARGE_MAX + 1`, damit jeder Leser den Puls genau einmal als `charge === CHARGE_MAX` sieht, unabhängig von der Reihenfolge.
@@ -42,7 +45,7 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 
 ## Stand (02.11.2026)
 **Fertig:**
-- 102 malbare Elemente (plus 11 interne wie Strahlung, Rakete, Rost, Glut) in 12 Kategorien: Land, Feststoffe, Metalle, Flüssigkeiten, Gase, Energie, Technik, Logik, Strahlung, Leben, Sprengstoffe, Spezial, dazu der Tab Werkzeuge. Neu: Laser in 4 Richtungen, Feuerwerk mit Füllung, Kohle mit Glut.
+- 131 malbare Elemente (plus 14 interne wie Strahlung, Rakete, Rost, Glut, blaue Flamme, Spinnennetz) in 12 Kategorien: Land, Feststoffe, Metalle, Flüssigkeiten, Gase, Energie, Technik, Logik, Strahlung, Leben, Sprengstoffe, Spezial, dazu der Tab Werkzeuge.
 - Temperatur, Strom, Wind, Luftdruck, Strahlung mit kritischer Masse, Geschwindigkeit/Trümmer und Mutationen.
 - Pixelgröße 1–12 px, Touch-Bedienung, Werkzeuge Linie/Rechteck/Füllen/Pipette, Undo/Redo.
 - Speichern/Laden, Teilen-Link und Demo-Szenen.
@@ -55,7 +58,7 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 
 **Offene Ideen (noch nicht umgesetzt):**
 - Tag/Nacht und Wetter (Punkt 5 der ursprünglichen Liste).
-- Gatter in alle Richtungen, weitere Gatter (ODER, XOR, Flipflop).
+- Gatter in alle Richtungen.
 - Mehr Demos, Partikel-Infofenster.
 
 ## Versionierung

@@ -34,12 +34,14 @@ export function rgb565ToPixel(v: number, brightness = 1): number {
   return ((255 << 24) | (c(b) << 16) | (c(g) << 8) | c(r)) >>> 0;
 }
 
-/** Lookup table: RGB565 → packed pixel, built lazily (64k entries). */
-let lut: Uint32Array | null = null;
-export function rgb565Lut(): Uint32Array {
+/** Lookup tables: RGB565 → packed pixel (full and dimmed), built lazily (64k entries each). */
+const luts = new Map<number, Uint32Array>();
+export function rgb565Lut(brightness = 1): Uint32Array {
+  let lut = luts.get(brightness);
   if (!lut) {
     lut = new Uint32Array(65536);
-    for (let v = 0; v < 65536; v++) lut[v] = rgb565ToPixel(v);
+    for (let v = 0; v < 65536; v++) lut[v] = rgb565ToPixel(v, brightness);
+    luts.set(brightness, lut);
   }
   return lut;
 }

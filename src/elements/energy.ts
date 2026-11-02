@@ -151,3 +151,14 @@ export const energy: ElementDef[] = [
     },
   },
 ];
+
+// Blue flame (burning alcohol): behaves exactly like fire, only bluer.
+const fireDef = energy.find((d) => d.key === 'fire')!;
+energy.push({
+  ...fireDef,
+  key: 'blue fire',
+  label: 'Blaue Flamme',
+  category: 'hidden',
+  color: ['#3a7bff', '#5c9dff', '#9cc8ff', '#2a5bff'],
+  description: undefined,
+});

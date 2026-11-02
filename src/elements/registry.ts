@@ -1,6 +1,7 @@
 import type { Category, ElementDef, State } from '../sim/types';
 import { ID } from './ids';
-import { P, EMPTY, STATIC, POWDER, LIQUID, GAS, RAD_NONE, RAD_BLOCK, RAD_KILL, RAD_MODERATE, RAD_MUTATE, RAD_FEED } from './props';
+import { hexToRgb565 } from './color';
+import { P, EMPTY, STATIC, POWDER, LIQUID, GAS, LIGHT_ABSORB, LIGHT_PASS, LIGHT_SLASH, LIGHT_BACKSLASH, LIGHT_FILTER, RAD_NONE, RAD_BLOCK, RAD_KILL, RAD_MODERATE, RAD_MUTATE, RAD_FEED } from './props';
 import { tech } from './tech';
 import { logic } from './logic';
 import { nuclear } from './nuclear';
@@ -139,6 +140,10 @@ function build(): void {
   P.restless = new Uint8Array(n);
   P.lightsUp = new Uint8Array(n);
   P.ownColor = new Uint8Array(n);
+  P.lifeIsElement = new Uint8Array(n);
+  P.defaultParam = new Uint16Array(n);
+  P.light = new Uint8Array(n);
+  P.onLight = [];
   P.logic = new Uint8Array(n);
   P.emit = new Float32Array(n);
   P.decayHeat = new Float32Array(n);
@@ -217,7 +222,13 @@ function build(): void {
     P.update[i] = d.update;
     P.restless[i] = d.state === 'gas' || !!d.lifespan || (!!d.update && !d.calm) || !!d.radioactive ? 1 : 0;
     P.lightsUp[i] = d.lightsUp ? 1 : 0;
-    P.ownColor[i] = d.option === 'color' ? 1 : 0;
+    P.ownColor[i] = d.option === 'color' ? (d.dimOwnColor ? 2 : 1) : 0;
+    P.lifeIsElement[i] = d.option === 'element' || d.key === 'clone' ? 1 : 0;
+    P.light[i] =
+      d.light === 'pass' ? LIGHT_PASS : d.light === 'mirror/' ? LIGHT_SLASH : d.light === 'mirror\\' ? LIGHT_BACKSLASH : d.light === 'filter' ? LIGHT_FILTER : LIGHT_ABSORB;
+    P.onLight[i] = d.onLight;
+    if (d.option === 'color') P.defaultParam[i] = hexToRgb565(d.optionDefault ?? '#ff2020');
+    else if (d.option === 'element' && d.optionDefault !== undefined) P.defaultParam[i] = ref(d.optionDefault, ctx);
     P.logic[i] = d.logic ? 1 : 0;
     P.emit[i] = d.radioactive?.emit ?? 0;
     P.decayHeat[i] = d.radioactive?.heat ?? 0;

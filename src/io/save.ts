@@ -1,4 +1,4 @@
-import { ELEMENTS, ID } from '../elements/registry';
+import { ELEMENTS, ID, P } from '../elements/registry';
 import type { Simulation } from '../sim/simulation';
 import { APP_VERSION } from '../version';
 
@@ -88,14 +88,14 @@ export async function deserialize(sim: Simulation, file: SceneFile): Promise<voi
     sim.life[i] = lifes[i];
     sim.shade[i] = sim.rng.int(4);
   }
-  // Some cells store an element id in `life`; remap those too. Clone and
-  // firework keep it as is, a rocket above its 6 bits of flight time.
-  const { clone, firework, rocket } = ID;
+  // Some cells store an element id in `life` (clone, firework, converter …);
+  // remap those too. A rocket keeps it above its 6 bits of flight time.
+  const rocket = ID.rocket;
   for (let i = 0; i < n; i++) {
     const t = sim.type[i];
     const l = sim.life[i];
     if (l === 0) continue;
-    if (t === clone || t === firework) sim.life[i] = remap[l] ?? 0;
+    if (P.lifeIsElement[t]) sim.life[i] = remap[l] ?? 0;
     else if (t === rocket) sim.life[i] = (l & 63) | ((remap[l >> 6] ?? 0) << 6);
   }
   sim.wakeAll();

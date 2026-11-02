@@ -16,6 +16,13 @@ export const RAD_MODERATE = 3;
 export const RAD_MUTATE = 4;
 export const RAD_FEED = 5;
 
+/** What a laser beam does at a cell (P.light). */
+export const LIGHT_ABSORB = 0;
+export const LIGHT_PASS = 1;
+export const LIGHT_SLASH = 2; // mirror ╱
+export const LIGHT_BACKSLASH = 3; // mirror ╲
+export const LIGHT_FILTER = 4;
+
 /** Density of air; gases lighter than this rise, heavier ones sink. */
 export const AIR_DENSITY = 10;
 
@@ -56,8 +63,16 @@ export const P = {
   conducts: new Uint8Array(0),
   resist: new Float32Array(0),
   lightsUp: new Uint8Array(0),
-  /** Rendered in the RGB565 color stored in `life` (lasers). */
+  /** Rendered in the RGB565 color stored in `life` (1), or darker (2). */
   ownColor: new Uint8Array(0),
+  /** `life` holds an element id (clone, firework, converter …): remapped on load. */
+  lifeIsElement: new Uint8Array(0),
+  /** Value used when `life` is 0 for elements with an option (RGB565 color or element id). */
+  defaultParam: new Uint16Array(0),
+  /** LIGHT_* code per element. */
+  light: new Uint8Array(0),
+  /** Beam absorbed here → this instead of heating. */
+  onLight: [] as (((sim: import('../sim/simulation').Simulation, i: number, x: number, y: number) => void) | undefined)[],
   logic: new Uint8Array(0),
   emit: new Float32Array(0),
   decayHeat: new Float32Array(0),

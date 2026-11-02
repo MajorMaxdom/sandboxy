@@ -1,6 +1,7 @@
 import { CATEGORIES, ELEMENTS, ID, baseColor, paletteElements } from '../elements/registry';
 import { DEFAULT_LASER, hexToRgb565, rgb565ToHex } from '../elements/color';
 import type { Tool } from '../sim/brush';
+import type { ElementDef } from '../sim/types';
 
 interface PaletteItem {
   label: string;
@@ -41,10 +42,19 @@ function sameTool(a: Tool, b: Tool): boolean {
 const TAB_KEY = 'sandboxy.tab';
 const OPTS_KEY = 'sandboxy.opts';
 
-/** Settings for elements with a toolbar option, remembered across visits. */
-const opts = { laserColor: '#ff2020', filling: '' };
+/**
+ * Settings for elements with a toolbar option, remembered across visits:
+ * option key (see ElementDef.optionKey) → hex color or element key.
+ */
+const opts: Record<string, string> = {};
 try {
-  Object.assign(opts, JSON.parse(localStorage.getItem(OPTS_KEY) ?? '{}'));
+  const saved = JSON.parse(localStorage.getItem(OPTS_KEY) ?? '{}') as Record<string, string>;
+  // Format of v0.2.0: { laserColor, filling }.
+  if (saved.laserColor) saved.laser ??= saved.laserColor;
+  if (saved.filling !== undefined) saved.firework ??= saved.filling;
+  delete saved.laserColor;
+  delete saved.filling;
+  Object.assign(opts, saved);
 } catch {
   /* storage unavailable or broken */
 }
@@ -56,16 +66,29 @@ function saveOpts(): void {
   }
 }
 
-/** The option an element tool carries (laser color, firework filling), if any. */
-function optionOf(tool: Tool): 'color' | 'element' | undefined {
-  return tool.kind === 'element' ? ELEMENTS[tool.id].option : undefined;
+/** The element definition of a tool, if it has a toolbar option. */
+function optionDef(tool: Tool): ElementDef | undefined {
+  if (tool.kind !== 'element') return undefined;
+  const d = ELEMENTS[tool.id];
+  return d.option ? d : undefined;
+}
+
+const optKey = (d: ElementDef) => d.optionKey ?? d.key;
+
+/** Current option value: hex color, element key, or '' for "none". */
+function optValue(d: ElementDef): string {
+  const v = opts[optKey(d)];
+  if (d.option === 'color') return v && /^#[0-9a-f]{6}$/i.test(v) ? v : (d.optionDefault ?? '#ff2020');
+  if (v !== undefined && (v === '' ? d.optionNone !== undefined : ID[v] !== undefined)) return v;
+  return d.optionDefault ?? '';
 }
 
 /** Attach the current option value to an element tool. */
 function withParam(tool: Tool): Tool {
-  const o = optionOf(tool);
-  if (tool.kind !== 'element' || !o) return tool;
-  const param = o === 'color' ? hexToRgb565(opts.laserColor) : (ID[opts.filling] ?? 0);
+  const d = optionDef(tool);
+  if (tool.kind !== 'element' || !d) return tool;
+  const v = optValue(d);
+  const param = d.option === 'color' ? hexToRgb565(v) : (ID[v] ?? 0);
   return { ...tool, param };
 }
 
@@ -149,34 +172,36 @@ export function createToolbar(
 
   /** Controls for the selected element's option (color picker / filling). */
   function renderOpts(): void {
-    const o = optionOf(current);
-    if (!o) {
+    const d = optionDef(current);
+    if (!d) {
       optsEl.replaceChildren();
       return;
     }
+    const key = optKey(d);
     const label = document.createElement('label');
     const apply = () => {
       saveOpts();
       current = withParam(current);
       onSelect(current, '');
     };
-    if (o === 'color') {
+    if (d.option === 'color') {
       const input = document.createElement('input');
       input.type = 'color';
-      input.value = opts.laserColor;
-      input.title = 'Farbe des Laserstrahls. Über einen Laser malen färbt ihn um.';
+      input.value = optValue(d);
+      input.title = 'Übermalen mit einer anderen Farbe färbt vorhandene Teile um.';
       input.addEventListener('input', () => {
-        opts.laserColor = input.value;
+        opts[key] = input.value;
         apply();
       });
-      label.append('Farbe ', input);
+      label.append(`${d.optionLabel ?? 'Farbe'} `, input);
     } else {
       const sel = document.createElement('select');
-      sel.title = 'Worin das Feuerwerk zerplatzt';
-      const sparks = document.createElement('option');
-      sparks.value = '';
-      sparks.textContent = 'Funken (Standard)';
-      sel.append(sparks);
+      if (d.optionNone !== undefined) {
+        const none = document.createElement('option');
+        none.value = '';
+        none.textContent = d.optionNone;
+        sel.append(none);
+      }
       for (const c of CATEGORIES) {
         const group = document.createElement('optgroup');
         group.label = c.label;
@@ -188,12 +213,12 @@ export function createToolbar(
         }
         sel.append(group);
       }
-      sel.value = ID[opts.filling] !== undefined ? opts.filling : '';
+      sel.value = optValue(d);
       sel.addEventListener('change', () => {
-        opts.filling = sel.value;
+        opts[key] = sel.value;
         apply();
       });
-      label.append('Füllung ', sel);
+      label.append(`${d.optionLabel ?? 'Element'} `, sel);
     }
     optsEl.replaceChildren(label);
   }
@@ -221,10 +246,11 @@ export function createToolbar(
     /** Select a tool from outside (pipette): jump to its tab and highlight it. */
     select(tool: Tool) {
       // Picked from the world (pipette): adopt its color / filling.
-      const o = optionOf(tool);
-      if (o && tool.kind === 'element' && tool.param !== undefined) {
-        if (o === 'color') opts.laserColor = rgb565ToHex(tool.param || DEFAULT_LASER);
-        else opts.filling = tool.param ? ELEMENTS[tool.param]?.key ?? '' : '';
+      const d = optionDef(tool);
+      if (d && tool.kind === 'element' && tool.param !== undefined) {
+        const key = optKey(d);
+        if (d.option === 'color') opts[key] = rgb565ToHex(tool.param || DEFAULT_LASER);
+        else opts[key] = tool.param ? (ELEMENTS[tool.param]?.key ?? '') : '';
         saveOpts();
       }
       current = withParam(tool);

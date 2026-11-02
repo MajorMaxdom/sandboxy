@@ -23,6 +23,13 @@ export function react(sim: Simulation, i: number, x: number, y: number, id: numb
   return false;
 }
 
+/** Cooling per tick of a fire smothered by CO₂. */
+const SMOTHER = 40;
+/** With oxygen next to it, things burn this much faster … */
+const OXYGEN_SPEED = 6;
+/** … and this much hotter. */
+const OXYGEN_HEAT = 400;
+
 /**
  * A flammable cell above its ignition temperature: heats itself up, throws
  * flames at free neighbours, and eventually burns away. Returns true if the
@@ -30,9 +37,21 @@ export function react(sim: Simulation, i: number, x: number, y: number, id: numb
  */
 export function burn(sim: Simulation, i: number, x: number, y: number, id: number): boolean {
   const rng = sim.rng;
+  // Oxygen fans the fire (and is used up), CO₂ smothers it.
+  let oxygen = -1;
+  for (const j of sim.neighbors4(x, y)) {
+    const t = sim.type[j];
+    if (t === ID.co2) {
+      sim.temp[i] -= SMOTHER;
+      return false;
+    }
+    if (t === ID.oxygen) oxygen = j;
+  }
+  if (oxygen >= 0 && rng.next() < 0.02) sim.transform(oxygen, ID.fire);
+  const boost = oxygen >= 0;
   const r = rng.next();
-  const chance = P.burnChance[id];
-  const heat = P.burnHeat[id];
+  const chance = P.burnChance[id] * (boost ? OXYGEN_SPEED : 1);
+  const heat = P.burnHeat[id] + (boost ? OXYGEN_HEAT : 0);
   // Solids/powders must reach full burning heat before they can burn away,
   // which gives the flames time to creep on to the next piece (fuses!).
   const hotEnough = P.state[id] === GAS || chance >= 1 || sim.temp[i] >= heat * 0.9;

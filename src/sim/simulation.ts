@@ -82,6 +82,12 @@ export class Simulation {
   beam = new Uint32Array(0);
   /** Some laser drew into `beam` since it was last cleared. */
   beamUsed = false;
+  /**
+   * Portal exits: collected while ticking (portalExitsNext), read by the
+   * entrances during the following tick (portalExits).
+   */
+  portalExits: number[] = [];
+  portalExitsNext: number[] = [];
   /** Global wind of the previous tick; a change wakes every chunk once. */
   private lastWind = 0;
 
@@ -121,6 +127,8 @@ export class Simulation {
     this.thermal = new Uint8Array(this.cw * this.ch);
     this.beam = new Uint32Array(this.size);
     this.beamUsed = false;
+    this.portalExits = [];
+    this.portalExitsNext = [];
     this.wakeAll();
   }
 
@@ -196,6 +204,8 @@ export class Simulation {
     this.airActive = false;
     this.beam.fill(0);
     this.beamUsed = false;
+    this.portalExits.length = 0;
+    this.portalExitsNext.length = 0;
     this.wakeAll();
   }
 
@@ -360,6 +370,12 @@ export class Simulation {
       awake.fill(1);
       this.lastWind = this.wind;
     }
+
+    // Portal exits re-register every tick.
+    const exits = this.portalExits;
+    this.portalExits = this.portalExitsNext;
+    this.portalExitsNext = exits;
+    exits.length = 0;
 
     // Lasers redraw their beams during this tick.
     if (this.beamUsed) {

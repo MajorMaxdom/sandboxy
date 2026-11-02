@@ -125,12 +125,18 @@ export const land: ElementDef[] = [
     update(sim, i, x, y) {
       const { w, type, rng } = sim;
       // Water puts it out: back to (warm) coal, the water hisses off as steam.
+      // CO₂ smothers it more slowly.
       for (const j of sim.neighbors4(x, y)) {
         const t = type[j];
         if (t === ID.water || t === ID['salt water']) {
           sim.transform(j, ID.steam);
           sim.transform(i, ID.coal);
           sim.temp[i] = 100;
+          return true;
+        }
+        if (t === ID.co2 && rng.next() < 0.02) {
+          sim.transform(i, ID.coal);
+          sim.temp[i] = 300;
           return true;
         }
       }
@@ -143,5 +149,20 @@ export const land: ElementDef[] = [
       }
       return false;
     },
+  },
+  {
+    key: 'clay',
+    label: 'Ton',
+    category: 'land',
+    color: ['#b5734a', '#a8683f', '#c27e55', '#9c5f39'],
+    state: 'powder',
+    density: 170,
+    conductivity: 0.25,
+    heatCap: 1.5,
+    windFactor: 0,
+    tempHigh: 900,
+    stateHigh: 'brick',
+    transitionChance: 0.02,
+    description: 'Wird im Feuer (ab 900 °C) zu Ziegel gebrannt.',
   },
 ];

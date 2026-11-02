@@ -107,4 +107,31 @@ export const gases: ElementDef[] = [
     },
     description: 'Schwebt und lässt es regnen. Bei Frost schneit es.',
   },
+  {
+    key: 'oxygen',
+    label: 'Sauerstoff',
+    category: 'gases',
+    color: ['#2a3a52', '#2e4058', '#26364c', '#324660'],
+    state: 'gas',
+    density: 11,
+    conductivity: 0.05,
+    // Flames race through it.
+    reactions: { fire: { into: 'fire', chance: 0.03 }, 'blue fire': { into: 'fire', chance: 0.03 } },
+    description: 'Facht Feuer an: Flammen laufen hindurch, daneben brennt alles viel schneller und heißer. Pflanzen machen ihn aus CO₂.',
+  },
+  {
+    key: 'co2',
+    label: 'CO₂',
+    category: 'gases',
+    color: ['#3a3d42', '#36393e', '#3f4247', '#323539'],
+    state: 'gas',
+    density: 15,
+    conductivity: 0.05,
+    reactions: {
+      fire: { otherInto: 'smoke', chance: 0.5 },
+      'blue fire': { otherInto: 'smoke', chance: 0.5 },
+      plant: { into: 'oxygen', chance: 0.01 },
+    },
+    description: 'Schwerer als Luft, sammelt sich am Boden und erstickt Feuer und Glut.',
+  },
 ];

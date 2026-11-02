@@ -137,6 +137,8 @@ export const explosives: ElementDef[] = [
     // happens in update so the filling (stored in `life`) goes along.
     burn: { ignite: FIREWORK_IGNITE, chance: 1, into: 'rocket', heat: 400, spread: 0 },
     option: 'element',
+    optionLabel: 'Füllung',
+    optionNone: 'Funken (Standard)',
     calm: true,
     update(sim, i) {
       if (sim.temp[i] < FIREWORK_IGNITE) return false;

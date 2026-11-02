@@ -6,6 +6,19 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.3.0] – 2026-11-02
+
+### Neu
+- **Licht:** Spiegel ╱ und ╲, Farbfilter (lässt nur seine Farbe durch, Weiß wird farbig), Solarzelle (Strom aus Laserlicht), Lichtsensor (Lichtschranke).
+- **Feuer und Chemie:** Sauerstoff (Flammen laufen hindurch, Feuer brennt schneller und heißer), CO₂ (sinkt, erstickt Feuer und Glut, Pflanzen machen daraus Sauerstoff), Lauge (neutralisiert Säure, zersetzt Pflanzen und Aluminium), Alkohol (blaue Flamme, mischt sich mit Wasser), Wachs (schmilzt bei 60 °C).
+- **Feststoffe und Flüssigkeiten:** Ton (wird im Feuer zu Ziegel), Gummi (isoliert, säurefest), Papier (brennt sehr schnell), Honig (sehr zähflüssig).
+- **Technik und Logik:** ODER-, XOR-Gatter, Flipflop, Wasserhahn mit wählbarem Element, Förderbänder ← →.
+- **Leben:** Gras (wächst über Erde), Moos (überwächst feuchten Stein), Algen (wachsen im Wasser, Fische fressen sie), Spinne mit Netz.
+- **Spezial:** Schwarzes Loch, Antimaterie, Konverter mit wählbarem Zielelement, Portal-Paare mit Kanalfarbe.
+
+### Geändert
+- Element-Einstellungen (Farbe, Füllung, Kanal …) werden pro Element gemerkt. Alle Laser teilen sich eine Farbe, Portal-Eingang und -Ausgang ihren Kanal.
+
 ## [0.2.0] – 2026-11-02
 
 ### Neu
@@ -29,6 +42,7 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.2.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MajorMaxdom/sandboxy/releases/tag/v0.1.0

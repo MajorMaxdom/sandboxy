@@ -25,12 +25,15 @@ npm run build    # Produktions-Build nach dist/
 - **Bewegung:** Fallen mit Beschleunigung, Explosionen schleudern Trümmer ballistisch
 - **Luft:** Druck und Strömung (auf einem 2×2-groben Raster): Druckwellen, Gebläse treiben Luft durch Röhren
 - **Strom:** Impulse durch Leiter; Batterie, Generatoren (Windrad, Dampfturbine), Lampen
-- **Logik:** Schalter, Taktgeber, Berührungs-/Hitzesensor, Diode, Verzögerer, NICHT- und UND-Gatter (Gatter zeigen nach rechts: Eingang links bzw. oben/unten, Ausgang rechts). Gebläse und Laser mit Kabel laufen nur unter Strom.
-- **Laser** (Technik, 4 Richtungen): Farbe frei wählbar, der Strahl erhitzt, was er trifft, und geht durch Glas. Mit anderer Farbe über einen Laser malen färbt ihn um.
+- **Logik:** Schalter, Taktgeber, Berührungs-/Hitze-/Lichtsensor, Diode, Verzögerer, NICHT-, UND-, ODER-, XOR-Gatter und Flipflop (Gatter zeigen nach rechts: Eingang links bzw. oben/unten, Ausgang rechts). Gebläse, Laser und Wasserhahn mit Kabel laufen nur unter Strom.
+- **Laser** (Technik, 4 Richtungen): Farbe frei wählbar, der Strahl erhitzt, was er trifft, und geht durch Glas. Mit anderer Farbe über einen Laser malen färbt ihn um. **Spiegel** ╱ ╲ lenken ihn um, **Farbfilter** lassen nur ihre Farbe durch, **Solarzelle** und **Lichtsensor** machen aus Licht Strom.
+- **Feuer und Chemie:** Sauerstoff facht Feuer an, CO₂ sinkt zu Boden und erstickt es, Lauge neutralisiert Säure, Alkohol brennt blau, Wachs schmilzt schon bei 60 °C, Ton wird im Feuer zu Ziegel.
+- **Technik:** Wasserhahn (gibt ein wählbares Element aus), Förderbänder.
+- **Spezial:** Schwarzes Loch, Antimaterie, Konverter (verwandelt in ein wählbares Element), Portale (Eingang und Ausgang mit gleicher Kanalfarbe gehören zusammen).
 - **Kohle** (Land): Angezündet wird sie zu Glut, die lange und sehr heiß glüht. Wasser löscht sie.
 - **Feuerwerk:** Unter der Palette eine Füllung wählen (z. B. Wasser, Säure, Samen), dann zerplatzt die Rakete in dieses Element statt in Funken.
 - **Strahlung:** Uran/Plutonium (kritische Masse), Abschirmung durch Blei/Wand/Steuerstab, Mutationen
-- **Leben:** Pflanzen, Pilze, Ranken, Fische, Ameisen, Vögel, Würmer, Bakterien
+- **Leben:** Pflanzen, Pilze, Ranken, Gras, Moos, Algen, Fische, Ameisen, Spinnen, Vögel, Würmer, Bakterien
 
 ## Aufbau
 - `src/elements/`: Elementdefinitionen, eine Datei pro Kategorie. Ein neues Element ist ein Objekt in einer dieser Listen (siehe `ElementDef` in `src/sim/types.ts`).
