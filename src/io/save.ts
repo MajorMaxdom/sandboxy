@@ -1,15 +1,19 @@
 import { ELEMENTS, ID } from '../elements/registry';
 import type { Simulation } from '../sim/simulation';
+import { APP_VERSION } from '../version';
 
 /**
  * Scene file format (JSON):
- *   { app: 'sandboxy', v: 1, w, h, names: [id → element key], data: base64 }
+ *   { app: 'sandboxy', v: 1, appVersion, w, h, names: [id → element key], data: base64 }
  * where data = gzip(type bytes ‖ temperature as Int16 ‖ life as Uint16).
  * Element names are stored so saves survive reordering of the element list.
  */
 export interface SceneFile {
   app: 'sandboxy';
+  /** Format version (only changes when old files can't be read as before). */
   v: 1;
+  /** Sandboxy version that wrote the file (informational; missing in old files). */
+  appVersion?: string;
   w: number;
   h: number;
   names: string[];
@@ -55,6 +59,7 @@ export async function serialize(sim: Simulation): Promise<SceneFile> {
   return {
     app: 'sandboxy',
     v: 1,
+    appVersion: APP_VERSION,
     w: sim.w,
     h: sim.h,
     names: ELEMENTS.map((e) => e.key),

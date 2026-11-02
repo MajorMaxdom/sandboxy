@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 106 Tests, alle grün
+npm test             # Vitest, aktuell 107 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.
@@ -22,6 +22,7 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - **Temperatur überspringt Chunks** (`temperature.ts`), wenn der Block schläft, alle Zellen höchstens 0,5 °C von der Umgebung abweichen und kein Phasenübergang und keine Zündung ansteht. Dafür wird jeder Block jeden Tick kurz gescannt, also dürfen `temp`-Werte ohne `wake()` geschrieben werden. Ein Block läuft auch dann, wenn sein rechter oder unterer Nachbar Wärme braucht, weil jede Zelle nur mit rechts und unten austauscht.
 - **Systeme:** `movement.ts` (Pulver/Flüssig/Gas + ballistischer Flug), `temperature.ts` (Diffusion + Phasenübergänge), `reactions.ts` (Reaktionen, Brennen), `electricity.ts` (Impulse, Schalter-Gating), `explosion.ts`, `radiation.ts` (Strahlungsteilchen, Spaltung, Atomexplosion, `signal()`/`pulse()` für Logik), `wind.ts` (globaler Wind, Gebläse-Strahl), `air.ts` (Druck/Strömung auf **2×2-grobem** Raster, `sim.airIndex(x,y)`).
 - **UI:** `main.ts` (Loop, Layout/Pixelgröße, Tastatur, Formen-Werkzeuge), `ui/toolbar.ts` (inkl. Optionszeile: Laserfarbe, Feuerwerk-Füllung), `ui/view.ts` (Zoom/Pan per CSS-Transform, Raster bleibt gleich), `ui/saves.ts` (Szenen-Dialog), `ui/history.ts` (Undo/Redo per Snapshot), `render/renderer.ts` (Normal/Wärme/Druck + Overlay), `input/pointer.ts`.
+- **Version:** `src/version.ts` (aus `package.json`), Changelog in `CHANGELOG.md`, siehe „Versionierung“.
 - **IO:** `io/save.ts` (gzip+base64-JSON mit Elementnamen → robust gegen Umsortierung), `io/share.ts` (Szene im URL-Hash `#s=`), `io/demos.ts` (8 Demo-Szenen per Code).
 
 ## Konventionen und Stolperfallen
@@ -56,6 +57,13 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - Tag/Nacht und Wetter (Punkt 5 der ursprünglichen Liste).
 - Gatter in alle Richtungen, weitere Gatter (ODER, XOR, Flipflop).
 - Mehr Demos, Partikel-Infofenster.
+
+## Versionierung
+- Version steht **nur** in `package.json`. `vite.config.ts` reicht sie als `__APP_VERSION__` durch (`src/version.ts`). Angezeigt wird sie in der Kopfzeile und im Szenen-Dialog, außerdem landet sie als `appVersion` in Speicherdateien.
+- SemVer: **Minor** für neue Elemente oder Funktionen, **Patch** für reine Fehlerkorrekturen. Das Szenenformat `v: 1` ist davon unabhängig und ändert sich nur, wenn alte Dateien nicht mehr wie bisher lesbar sind.
+- **Bei jeder Änderung:** Eintrag in `CHANGELOG.md` unter „Unveröffentlicht“.
+- **Release:** Version mit `npm pkg set version=X.Y.Z && npm install --package-lock-only` setzen, im Changelog „Unveröffentlicht“ in `[X.Y.Z] – Datum` umbenennen und die Vergleichslinks unten anpassen. Dann committen, mit `git tag -a vX.Y.Z -m "Sandboxy X.Y.Z"` taggen und mit `git push --follow-tags` pushen.
+- Git-Identität im Repo: `MajorMaxdom <57041850+MajorMaxdom@users.noreply.github.com>`, nie der echte Name.
 
 ## Verifikation
 - `npm test` muss grün sein, `npm run build` ohne Fehler.

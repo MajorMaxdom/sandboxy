@@ -8,6 +8,7 @@ import { createToolbar } from './ui/toolbar';
 import { setupSavesDialog } from './ui/saves';
 import { History } from './ui/history';
 import { View } from './ui/view';
+import { APP_VERSION } from './version';
 import { hasSharedScene, loadShared } from './io/share';
 import type { GridPoint } from './input/pointer';
 
@@ -31,6 +32,9 @@ const hoverEl = $('hover');
 const statsEl = $('stats');
 const rngWind = $<HTMLInputElement>('rng-wind');
 const windVal = $('wind-val');
+
+$('app-version').textContent = `v${APP_VERSION}`;
+$('dlg-version').textContent = `v${APP_VERSION}`;
 
 // ---- Toolbar first, so the stage has its final height before we measure ----
 
@@ -473,4 +477,4 @@ if (hasSharedScene()) {
 }
 
 // Handy for debugging in the browser console.
-(window as unknown as { sandboxy: unknown }).sandboxy = { sim, ELEMENTS, ID };
+(window as unknown as { sandboxy: unknown }).sandboxy = { sim, ELEMENTS, ID, version: APP_VERSION };

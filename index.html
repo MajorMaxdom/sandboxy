@@ -13,7 +13,7 @@
   <body>
     <div id="app">
       <header id="topbar">
-        <div class="brand">Sandboxy</div>
+        <div class="brand">Sandboxy <span id="app-version" class="version"></span></div>
         <div class="group">
           <button id="btn-play" type="button" title="Pause (Leertaste)">⏸</button>
           <button id="btn-step" type="button" title="Einzelschritt (.)">⏭</button>
@@ -116,6 +116,7 @@
         </label>
       </div>
       <p id="save-msg" role="status"></p>
+      <p class="dlg-version">Sandboxy <span id="dlg-version"></span></p>
     </dialog>
 
     <script type="module" src="/src/main.ts"></script>

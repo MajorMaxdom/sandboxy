@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { deserialize, serialize } from '../src/io/save';
 import { makeSim, put, run } from './helpers';
+import pkg from '../package.json';
 
 describe('save / load', () => {
   it('round-trips a scene', async () => {
@@ -20,6 +21,11 @@ describe('save / load', () => {
     expect(Array.from(b.type)).toEqual(Array.from(a.type));
     for (let i = 0; i < a.size; i++) expect(Math.abs(b.temp[i] - a.temp[i])).toBeLessThanOrEqual(0.5);
     expect(Array.from(b.life)).toEqual(Array.from(a.life));
+  });
+
+  it('records the app version from package.json', async () => {
+    const file = await serialize(makeSim(5, 5));
+    expect(file.appVersion).toBe(pkg.version);
   });
 
   it('rejects garbage', async () => {
