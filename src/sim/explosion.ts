@@ -49,7 +49,8 @@ export function explode(sim: Simulation, cx: number, cy: number, radius: number)
         temp[j] = Math.max(temp[j], 500 + 1500 * falloff);
       } else {
         const falloff = 1 - (d - radius) / (outer - radius);
-        temp[j] += 300 * falloff;
+        // Capped like the core, so chain reactions don't stack up the heat.
+        if (temp[j] < 2000) temp[j] = Math.min(2000, temp[j] + 300 * falloff);
         const st = P.state[t];
         if (st === POWDER || st === LIQUID) {
           // Fling debris outward (and a bit upward); it flies ballistically.

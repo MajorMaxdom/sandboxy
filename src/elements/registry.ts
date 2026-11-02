@@ -138,6 +138,7 @@ function build(): void {
   P.resist = new Float32Array(n);
   P.restless = new Uint8Array(n);
   P.lightsUp = new Uint8Array(n);
+  P.ownColor = new Uint8Array(n);
   P.logic = new Uint8Array(n);
   P.emit = new Float32Array(n);
   P.decayHeat = new Float32Array(n);
@@ -214,8 +215,9 @@ function build(): void {
     P.acidProof[i] = d.acidProof || d.state === 'empty' ? 1 : 0;
     P.paintChance[i] = d.paintChance ?? (d.state === 'static' ? 1 : 0.5);
     P.update[i] = d.update;
-    P.restless[i] = d.state === 'gas' || !!d.lifespan || !!d.update || !!d.radioactive ? 1 : 0;
+    P.restless[i] = d.state === 'gas' || !!d.lifespan || (!!d.update && !d.calm) || !!d.radioactive ? 1 : 0;
     P.lightsUp[i] = d.lightsUp ? 1 : 0;
+    P.ownColor[i] = d.option === 'color' ? 1 : 0;
     P.logic[i] = d.logic ? 1 : 0;
     P.emit[i] = d.radioactive?.emit ?? 0;
     P.decayHeat[i] = d.radioactive?.heat ?? 0;

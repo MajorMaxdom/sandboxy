@@ -14,8 +14,10 @@ export class PointerInput {
   down = false;
   /** Right mouse button → erase. */
   erase = false;
-  /** Middle button or Alt+click → pipette. */
+  /** Alt+click → pipette. */
   pickClick = false;
+  /** The stroke was cancelled (second finger for pinch-zoom); drop it. */
+  aborted = false;
   /** Grid position under the cursor, for the hover info; null when outside. */
   hover: GridPoint | null = null;
 
@@ -48,12 +50,13 @@ export class PointerInput {
 
   private onDown = (e: PointerEvent): void => {
     if (this.activeId !== null) return;
+    if (e.pointerType === 'mouse' && e.button === 1) return; // middle button pans the view
     e.preventDefault();
     this.activeId = e.pointerId;
     this.canvas.setPointerCapture(e.pointerId);
     this.down = true;
     this.erase = e.button === 2;
-    this.pickClick = e.button === 1 || e.altKey;
+    this.pickClick = e.altKey;
     const p = this.toGrid(e);
     this.last = null;
     this.queue = [p];
@@ -74,6 +77,17 @@ export class PointerInput {
     this.down = false;
     if (e.pointerType !== 'mouse') this.hover = null;
   };
+
+  /** Stop the current stroke without painting the rest (pinch-zoom started). */
+  cancel(): void {
+    if (this.activeId === null) return;
+    if (this.canvas.hasPointerCapture(this.activeId)) this.canvas.releasePointerCapture(this.activeId);
+    this.activeId = null;
+    this.down = false;
+    this.queue = [];
+    this.last = null;
+    this.aborted = true;
+  }
 
   /** True while drawing, or when a finished stroke still has unpainted points. */
   get painting(): boolean {

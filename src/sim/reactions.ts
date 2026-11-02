@@ -51,7 +51,9 @@ export function burn(sim: Simulation, i: number, x: number, y: number, id: numbe
     const t = sim.type[j];
     const expl = P.explIgnite[t];
     if (expl !== Infinity) sim.temp[j] = Math.max(sim.temp[j], expl + 50);
-    else if (P.burnIgnite[t] !== Infinity) sim.temp[j] += 25;
+    // Heat flammable neighbours, but never beyond this fire's own heat:
+    // otherwise burning cells push each other up without limit.
+    else if (P.burnIgnite[t] !== Infinity && sim.temp[j] < heat) sim.temp[j] = Math.min(heat, sim.temp[j] + 25);
   }
   const t = sim.temp[i] + 20;
   sim.temp[i] = t > heat ? Math.max(sim.temp[i], heat) : t;

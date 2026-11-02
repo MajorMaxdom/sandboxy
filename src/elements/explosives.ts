@@ -4,15 +4,36 @@ import { nuke } from '../sim/radiation';
 import { ID } from './ids';
 import { P, GAS, STATIC } from './props';
 
-/** Burst of same-colored sparkles around (cx, cy). */
-function burst(sim: Simulation, cx: number, cy: number): void {
+/**
+ * A rocket's `life` holds its remaining flight time in the low 6 bits and
+ * the firework filling (element id, 0 = sparks) above.
+ */
+const FLIGHT_BITS = 6;
+const FLIGHT_MASK = (1 << FLIGHT_BITS) - 1;
+/** Firework ignition temperature. */
+const FIREWORK_IGNITE = 180;
+
+/**
+ * Burst around (cx, cy): same-colored sparkles, or the filling element
+ * (with a few sparkles for show).
+ */
+function burst(sim: Simulation, cx: number, cy: number, filling = 0): void {
   const { w, rng } = sim;
   const color = rng.int(4);
   const center = cy * w + cx;
-  sim.transform(center, ID.sparkle);
-  sim.shade[center] = color;
+  const fill = filling > 0 && filling < P.n ? filling : 0;
+  const place = (j: number, sparkle: boolean) => {
+    if (sparkle) {
+      sim.transform(j, ID.sparkle);
+      sim.shade[j] = color;
+    } else {
+      sim.transform(j, fill);
+    }
+  };
+  place(center, !fill);
   const r = 5 + rng.int(6);
-  for (let n = 0; n < 45; n++) {
+  const n = fill ? 60 : 45;
+  for (let k = 0; k < n; k++) {
     const a = rng.next() * Math.PI * 2;
     const d = r * (0.3 + 0.7 * rng.next());
     const x = Math.round(cx + Math.cos(a) * d);
@@ -20,8 +41,7 @@ function burst(sim: Simulation, cx: number, cy: number): void {
     if (!sim.inBounds(x, y)) continue;
     const j = y * w + x;
     if (sim.type[j] !== 0) continue;
-    sim.transform(j, ID.sparkle);
-    sim.shade[j] = color;
+    place(j, !fill || k % 6 === 0);
   }
 }
 
@@ -113,8 +133,19 @@ export const explosives: ElementDef[] = [
     state: 'powder',
     density: 120,
     conductivity: 0.3,
-    burn: { ignite: 180, chance: 1, into: 'rocket', heat: 400, spread: 0 },
-    description: 'Anzünden: Die Rakete steigt auf und zerplatzt in bunte Funken.',
+    // `burn` makes fire creep in and wakes it when hot; the launch itself
+    // happens in update so the filling (stored in `life`) goes along.
+    burn: { ignite: FIREWORK_IGNITE, chance: 1, into: 'rocket', heat: 400, spread: 0 },
+    option: 'element',
+    calm: true,
+    update(sim, i) {
+      if (sim.temp[i] < FIREWORK_IGNITE) return false;
+      const filling = sim.life[i];
+      sim.transform(i, ID.rocket);
+      sim.life[i] = (sim.life[i] & FLIGHT_MASK) | (filling << FLIGHT_BITS);
+      return true;
+    },
+    description: 'Anzünden: Die Rakete steigt auf und zerplatzt in bunte Funken – oder in die gewählte Füllung.',
   },
   {
     key: 'rocket',
@@ -128,9 +159,10 @@ export const explosives: ElementDef[] = [
     glow: true,
     update(sim, i, x, y) {
       const { w, type, rng } = sim;
-      const left = sim.life[i];
+      const left = sim.life[i] & FLIGHT_MASK;
+      const filling = sim.life[i] >> FLIGHT_BITS;
       if (left <= 1) {
-        burst(sim, x, y);
+        burst(sim, x, y, filling);
         return true;
       }
       let cur = i;
@@ -143,7 +175,7 @@ export const explosives: ElementDef[] = [
         const t = ny >= 0 ? type[ny * w + nx] : -1;
         // Bores through loose stuff (e.g. the rest of the firework pile); bursts at solids.
         if (t < 0 || (P.state[t] === STATIC && t !== ID.sparkle && t !== ID.rocket)) {
-          burst(sim, cx, cy);
+          burst(sim, cx, cy, filling);
           return true;
         }
         sim.swap(cur, ny * w + nx);
@@ -151,7 +183,7 @@ export const explosives: ElementDef[] = [
         cx = nx;
         cy = ny;
       }
-      sim.life[cur] = left - 1;
+      sim.life[cur] = (left - 1) | (filling << FLIGHT_BITS);
       if (rng.next() < 0.6 && type[cur + w] === 0) sim.transform(cur + w, ID.smoke);
       return true;
     },

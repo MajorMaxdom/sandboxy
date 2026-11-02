@@ -56,6 +56,8 @@ export const P = {
   conducts: new Uint8Array(0),
   resist: new Float32Array(0),
   lightsUp: new Uint8Array(0),
+  /** Rendered in the RGB565 color stored in `life` (lasers). */
+  ownColor: new Uint8Array(0),
   logic: new Uint8Array(0),
   emit: new Float32Array(0),
   decayHeat: new Float32Array(0),

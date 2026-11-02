@@ -7,6 +7,7 @@ import { PointerInput } from './input/pointer';
 import { createToolbar } from './ui/toolbar';
 import { setupSavesDialog } from './ui/saves';
 import { History } from './ui/history';
+import { View } from './ui/view';
 import { hasSharedScene, loadShared } from './io/share';
 import type { GridPoint } from './input/pointer';
 
@@ -34,7 +35,7 @@ const windVal = $('wind-val');
 // ---- Toolbar first, so the stage has its final height before we measure ----
 
 let tool: Tool = { kind: 'element', id: ID.sand };
-const toolbar = createToolbar($('tabs'), $('palette'), $('desc'), tool, (t) => {
+const toolbar = createToolbar($('tabs'), $('palette'), $('desc'), $('tool-opts'), tool, (t) => {
   tool = t;
 });
 
@@ -82,6 +83,9 @@ function pickGridSize(): { w: number; h: number } {
   };
 }
 
+/** Zoom/pan; created once the pointer input exists (see below). */
+let view: View;
+
 const initial = pickGridSize();
 const sim = new Simulation(initial.w, initial.h, (Math.random() * 2 ** 32) >>> 0);
 const renderer = new Renderer(canvas);
@@ -103,6 +107,7 @@ function regrid(): void {
   if (w !== sim.w || h !== sim.h) {
     sim.resizeKeep(w, h);
     renderer.resize(w, h);
+    view?.reset();
   }
   fitCanvas();
 }
@@ -110,6 +115,7 @@ function regrid(): void {
 let regridTimer = 0;
 new ResizeObserver(() => {
   fitCanvas();
+  view?.refit();
   clearTimeout(regridTimer);
   regridTimer = window.setTimeout(regrid, 250);
 }).observe(stage);
@@ -151,6 +157,7 @@ let stroke: { start: GridPoint; end: GridPoint; tool: Tool; shape: Shape } | nul
 const history = new History(sim, () => {
   renderer.resize(sim.w, sim.h);
   fitCanvas();
+  view.reset();
 });
 
 function updateUndoButtons(): void {
@@ -224,6 +231,7 @@ const openSaves = setupSavesDialog(sim, {
   afterLoad: (settings) => {
     renderer.resize(sim.w, sim.h);
     fitCanvas();
+    view.reset();
     if (settings) setWind(settings.wind);
   },
 });
@@ -294,6 +302,9 @@ window.addEventListener('keydown', (e) => {
     case '-':
       stepPixel(-1);
       break;
+    case '0':
+      view.reset();
+      break;
     case 'ArrowLeft':
       if (target.matches('input[type=range]')) break; // the slider handles it itself
       e.preventDefault();
@@ -314,6 +325,10 @@ updateUndoButtons();
 // ---- Input & loop -----------------------------------------------------------
 
 const input = new PointerInput(canvas, () => ({ w: sim.w, h: sim.h }));
+view = new View(canvas, stage, {
+  brushStep: (dir) => setBrush(brush + dir),
+  cancelPaint: () => input.cancel(),
+});
 const ERASE: Tool = { kind: 'erase' };
 
 
@@ -323,11 +338,15 @@ function pick(p: GridPoint): void {
   const id = sim.type[p.y * sim.w + p.x];
   const def = ELEMENTS[id];
   if (id === 0 || def.category === 'hidden') return;
-  tool = { kind: 'element', id };
-  toolbar.select(tool);
+  // Lasers and fireworks: take over their color / filling too.
+  tool = toolbar.select({ kind: 'element', id, param: def.option ? sim.life[p.y * sim.w + p.x] : undefined });
 }
 
 function handleInput(): void {
+  if (input.aborted) {
+    input.aborted = false;
+    stroke = null; // a pinch began: drop the line/rectangle being dragged
+  }
   if (!input.painting) {
     if (stroke) finishStroke();
     return;
@@ -434,7 +453,8 @@ function frame(now: number): void {
     fps = Math.round((frames * 1000) / (now - fpsTime));
     frames = 0;
     fpsTime = now;
-    statsEl.textContent = `${fps} FPS · ${sim.countParticles().toLocaleString('de-DE')} Partikel · ${sim.w}×${sim.h}`;
+    const zoom = view.zoom > 1 ? ` · Zoom ${view.zoom.toFixed(1).replace('.', ',')}×` : '';
+    statsEl.textContent = `${fps} FPS · ${sim.countParticles().toLocaleString('de-DE')} Partikel · ${sim.w}×${sim.h}${zoom}`;
   }
 
   requestAnimationFrame(frame);

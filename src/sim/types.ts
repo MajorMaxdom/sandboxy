@@ -113,6 +113,16 @@ export interface ElementDef {
 
   reactions?: Record<ElementKey, Reaction>;
   update?: UpdateFn;
+  /**
+   * The update only matters when something happens nearby (e.g. it checks a
+   * temperature), so it doesn't keep the chunk awake on its own.
+   */
+  calm?: boolean;
+  /**
+   * Extra setting chosen in the toolbar and stored in `life` when painted:
+   * 'color' = RGB565 color (lasers), 'element' = element id (firework filling).
+   */
+  option?: 'color' | 'element';
 
   /** Flickers when rendered. */
   glow?: boolean;

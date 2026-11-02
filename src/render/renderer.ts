@@ -1,5 +1,7 @@
 import { P, packColor } from '../elements/registry';
-import { CHARGE_MAX } from '../elements/props';
+import { CHARGE_MAX, GAS } from '../elements/props';
+import { ID } from '../elements/ids';
+import { DEFAULT_LASER, rgb565Lut } from '../elements/color';
 import type { Simulation } from '../sim/simulation';
 
 export type ViewMode = 'normal' | 'heat' | 'pressure';
@@ -54,6 +56,11 @@ function dim(c: number): number {
 }
 const HEAT_LUT_DIM = HEAT_LUT.map(dim);
 
+/** Average of two packed colors (light shining through gas or glass). */
+function mix(a: number, b: number): number {
+  return (((a >>> 1) & 0x7f7f7f7f) + ((b >>> 1) & 0x7f7f7f7f)) | 0xff000000;
+}
+
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private img!: ImageData;
@@ -107,10 +114,22 @@ export class Renderer {
         buf[i] = type[i] === 0 ? HEAT_LUT_DIM[t - T_MIN] : HEAT_LUT[t - T_MIN];
       }
     } else {
+      const beam = sim.beam;
+      const ownColor = P.ownColor;
+      const life = sim.life;
+      const own = rgb565Lut();
+      const state = P.state;
+      const glass = ID.glass;
       for (let i = 0; i < size; i++) {
         const id = type[i];
         const c = charge[i];
-        if (c > 0 && id !== 0 && !lightsUp[id]) {
+        const b = beam[i];
+        if (b !== 0) {
+          // Laser light: pure over empty space, mixed into gas and glass.
+          buf[i] = id === 0 ? b : state[id] === GAS || id === glass ? mix(colors[id * 4 + (shade[i] & 3)], b) : colors[id * 4 + (shade[i] & 3)];
+        } else if (ownColor[id]) {
+          buf[i] = own[life[i] || DEFAULT_LASER];
+        } else if (c > 0 && id !== 0 && !lightsUp[id]) {
           buf[i] = c >= CHARGE_MAX - 2 ? CHARGE_COLOR : CHARGE_DIM;
         } else if (glow[id]) {
           buf[i] = colors[id * 4 + ((Math.random() * 4) | 0)];

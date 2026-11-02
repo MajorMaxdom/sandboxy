@@ -73,6 +73,17 @@ export class Simulation {
   ch = 0;
   awake = new Uint8Array(0);
   awakeNext = new Uint8Array(0);
+  /** Scratch for the temperature pass: chunks whose heat needs simulating. */
+  thermal = new Uint8Array(0);
+  /**
+   * Laser light per cell (packed RGBA, 0 = none). Not matter: lasers redraw
+   * their beams every tick, the renderer paints them over empty space.
+   */
+  beam = new Uint32Array(0);
+  /** Some laser drew into `beam` since it was last cleared. */
+  beamUsed = false;
+  /** Global wind of the previous tick; a change wakes every chunk once. */
+  private lastWind = 0;
 
   constructor(w: number, h: number, seed = 12345) {
     this.rng = new Rng(seed);
@@ -107,6 +118,9 @@ export class Simulation {
     this.ch = Math.ceil(h / CHUNK);
     this.awake = new Uint8Array(this.cw * this.ch);
     this.awakeNext = new Uint8Array(this.cw * this.ch);
+    this.thermal = new Uint8Array(this.cw * this.ch);
+    this.beam = new Uint32Array(this.size);
+    this.beamUsed = false;
     this.wakeAll();
   }
 
@@ -180,6 +194,8 @@ export class Simulation {
     this.airU.fill(0);
     this.airV.fill(0);
     this.airActive = false;
+    this.beam.fill(0);
+    this.beamUsed = false;
     this.wakeAll();
   }
 
@@ -338,8 +354,18 @@ export class Simulation {
     this.awake = awake;
     this.awakeNext.fill(0);
     const cw = this.cw;
-    // Global wind can move anything light anywhere, so nothing may sleep.
-    if (this.wind !== 0) awake.fill(1);
+    // When the global wind changes, everything gets a look; after that only
+    // particles the wind can actually push keep their chunk awake (updateCell).
+    if (this.wind !== this.lastWind) {
+      awake.fill(1);
+      this.lastWind = this.wind;
+    }
+
+    // Lasers redraw their beams during this tick.
+    if (this.beamUsed) {
+      this.beam.fill(0);
+      this.beamUsed = false;
+    }
 
     // Fans write this tick's wind; particles read last tick's.
     let t = this.windPrevX; this.windPrevX = this.windX; this.windX = t;
@@ -353,14 +379,20 @@ export class Simulation {
       const ltr = ((y + this.tick) & 1) === 0;
       const row = y * w;
       const crow = (y >> CHUNK_SHIFT) * cw;
-      for (let k = 0; k < w; k++) {
-        const x = ltr ? k : w - 1 - k;
-        if (!awake[crow + (x >> CHUNK_SHIFT)]) continue;
-        const i = row + x;
-        const id = type[i];
-        if (id === 0 || clock[i] === parity) continue;
-        clock[i] = parity;
-        this.updateCell(i, x, y, id);
+      // Walk the row chunk by chunk, skipping sleeping chunks as a whole.
+      for (let k = 0; k < cw; k++) {
+        const cx = ltr ? k : cw - 1 - k;
+        if (!awake[crow + cx]) continue;
+        const x0 = cx << CHUNK_SHIFT;
+        const x1 = Math.min(w, x0 + CHUNK) - 1;
+        for (let s = 0; s <= x1 - x0; s++) {
+          const x = ltr ? x0 + s : x1 - s;
+          const i = row + x;
+          const id = type[i];
+          if (id === 0 || clock[i] === parity) continue;
+          clock[i] = parity;
+          this.updateCell(i, x, y, id);
+        }
       }
     }
 
@@ -408,6 +440,14 @@ export class Simulation {
       wy += (this.airV[a] + (y > 1 ? this.airV[a - this.aw] : 0)) * AIR_WIND_SCALE;
     }
     if ((wx !== 0 || wy !== 0) && blow(this, i, x, y, id, wx, wy)) return;
+    // Global wind: stay awake while there's room to be blown downwind.
+    if (this.wind !== 0 && P.windFactor[id] > 0) {
+      const nx = this.wind > 0 ? x + 1 : x - 1;
+      if (nx >= 0 && nx < this.w) {
+        const t = this.type[i + nx - x];
+        if (t === 0 || (P.state[id] !== GAS && P.state[t] === GAS)) this.wake(i);
+      }
+    }
 
     const update = P.update[id];
     if (update && update(this, i, x, y)) return;

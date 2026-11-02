@@ -119,6 +119,11 @@ input:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+/* Fixed width ("← 5" is the longest), so moving the slider never re-wraps the bar. */
+#wind-val {
+  min-width: 4ch;
+}
+
 .check input {
   accent-color: var(--accent);
   width: 16px;
@@ -246,11 +251,53 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+/* Fixed height: a changing toolbar height would resize the stage and re-grid the world. */
+#desc-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+  height: 34px;
+}
+
 #desc {
-  margin-top: 8px;
+  flex: 1;
+  min-width: 0;
   color: var(--muted);
   font-size: 13px;
-  min-height: 1.4em;
+  line-height: 16px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+#tool-opts:empty {
+  display: none;
+}
+
+#tool-opts label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+#tool-opts select {
+  min-height: 30px;
+  padding: 4px 8px;
+}
+
+#tool-opts input[type='color'] {
+  width: 44px;
+  height: 30px;
+  padding: 2px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 /* ---- Dialog ---- */
@@ -366,6 +413,11 @@ button.danger {
     display: none;
   }
 
+  /* All controls flow (and wrap) together instead of running off the right edge. */
+  .group {
+    display: contents;
+  }
+
   .brush input {
     width: 80px;
   }
@@ -402,9 +454,15 @@ button.danger {
     min-height: 40px;
   }
 
-  #desc {
+  #desc-row {
     padding: 0 16px;
+    gap: 10px;
+    height: 30px;
+  }
+
+  #desc {
     font-size: 12px;
+    line-height: 15px;
   }
 }
 

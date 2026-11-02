@@ -1,4 +1,5 @@
-import { CATEGORIES, ID, baseColor, paletteElements } from '../elements/registry';
+import { CATEGORIES, ELEMENTS, ID, baseColor, paletteElements } from '../elements/registry';
+import { DEFAULT_LASER, hexToRgb565, rgb565ToHex } from '../elements/color';
 import type { Tool } from '../sim/brush';
 
 interface PaletteItem {
@@ -38,6 +39,35 @@ function sameTool(a: Tool, b: Tool): boolean {
 }
 
 const TAB_KEY = 'sandboxy.tab';
+const OPTS_KEY = 'sandboxy.opts';
+
+/** Settings for elements with a toolbar option, remembered across visits. */
+const opts = { laserColor: '#ff2020', filling: '' };
+try {
+  Object.assign(opts, JSON.parse(localStorage.getItem(OPTS_KEY) ?? '{}'));
+} catch {
+  /* storage unavailable or broken */
+}
+function saveOpts(): void {
+  try {
+    localStorage.setItem(OPTS_KEY, JSON.stringify(opts));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** The option an element tool carries (laser color, firework filling), if any. */
+function optionOf(tool: Tool): 'color' | 'element' | undefined {
+  return tool.kind === 'element' ? ELEMENTS[tool.id].option : undefined;
+}
+
+/** Attach the current option value to an element tool. */
+function withParam(tool: Tool): Tool {
+  const o = optionOf(tool);
+  if (tool.kind !== 'element' || !o) return tool;
+  const param = o === 'color' ? hexToRgb565(opts.laserColor) : (ID[opts.filling] ?? 0);
+  return { ...tool, param };
+}
 
 /**
  * Category tabs + element buttons. Calls onSelect with the chosen tool.
@@ -46,9 +76,10 @@ export function createToolbar(
   tabsEl: HTMLElement,
   paletteEl: HTMLElement,
   descEl: HTMLElement,
+  optsEl: HTMLElement,
   initial: Tool,
   onSelect: (tool: Tool, label: string) => void,
-): { select: (tool: Tool) => void } {
+): { select: (tool: Tool) => Tool } {
   const cats = [...CATEGORIES.map((c) => ({ key: c.key as string, label: c.label })), { key: 'tools', label: 'Werkzeuge' }];
   let current: Tool = initial;
   let activeCat = 'land';
@@ -97,16 +128,74 @@ export function createToolbar(
         b.textContent = it.label;
         b.title = it.description;
         b.addEventListener('click', () => {
-          current = it.tool;
-          descEl.textContent = `${it.label}: ${it.description}`;
-          onSelect(it.tool, it.label);
+          current = withParam(it.tool);
+          setDesc(`${it.label}: ${it.description}`);
+          onSelect(current, it.label);
           renderPalette();
+          renderOpts();
         });
         return b;
       }),
     );
     // Keep the scroll position when re-rendering the same tab.
     paletteEl.scrollLeft = scroll;
+  }
+
+  /** Description line (clamped to two lines; the full text is in the tooltip). */
+  function setDesc(text: string): void {
+    descEl.textContent = text;
+    descEl.title = text;
+  }
+
+  /** Controls for the selected element's option (color picker / filling). */
+  function renderOpts(): void {
+    const o = optionOf(current);
+    if (!o) {
+      optsEl.replaceChildren();
+      return;
+    }
+    const label = document.createElement('label');
+    const apply = () => {
+      saveOpts();
+      current = withParam(current);
+      onSelect(current, '');
+    };
+    if (o === 'color') {
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.value = opts.laserColor;
+      input.title = 'Farbe des Laserstrahls. Über einen Laser malen färbt ihn um.';
+      input.addEventListener('input', () => {
+        opts.laserColor = input.value;
+        apply();
+      });
+      label.append('Farbe ', input);
+    } else {
+      const sel = document.createElement('select');
+      sel.title = 'Worin das Feuerwerk zerplatzt';
+      const sparks = document.createElement('option');
+      sparks.value = '';
+      sparks.textContent = 'Funken (Standard)';
+      sel.append(sparks);
+      for (const c of CATEGORIES) {
+        const group = document.createElement('optgroup');
+        group.label = c.label;
+        for (const d of paletteElements(c.key)) {
+          const op = document.createElement('option');
+          op.value = d.key;
+          op.textContent = d.label;
+          group.append(op);
+        }
+        sel.append(group);
+      }
+      sel.value = ID[opts.filling] !== undefined ? opts.filling : '';
+      sel.addEventListener('change', () => {
+        opts.filling = sel.value;
+        apply();
+      });
+      label.append('Füllung ', sel);
+    }
+    optsEl.replaceChildren(label);
   }
 
   // Mouse wheel scrolls the single-row palette sideways.
@@ -121,24 +210,35 @@ export function createToolbar(
     { passive: false },
   );
 
+  current = withParam(current);
   renderTabs();
   renderPalette();
+  renderOpts();
   const first = itemsFor('land')[0];
-  descEl.textContent = `${first.label}: ${first.description}`;
+  setDesc(`${first.label}: ${first.description}`);
 
   return {
     /** Select a tool from outside (pipette): jump to its tab and highlight it. */
     select(tool: Tool) {
-      current = tool;
+      // Picked from the world (pipette): adopt its color / filling.
+      const o = optionOf(tool);
+      if (o && tool.kind === 'element' && tool.param !== undefined) {
+        if (o === 'color') opts.laserColor = rgb565ToHex(tool.param || DEFAULT_LASER);
+        else opts.filling = tool.param ? ELEMENTS[tool.param]?.key ?? '' : '';
+        saveOpts();
+      }
+      current = withParam(tool);
       const cat = cats.find((c) => itemsFor(c.key).some((it) => sameTool(it.tool, tool)));
       if (cat) activeCat = cat.key;
       renderTabs();
       renderPalette();
+      renderOpts();
       const item = itemsFor(activeCat).find((it) => sameTool(it.tool, tool));
       if (item) {
-        descEl.textContent = `${item.label}: ${item.description}`;
+        setDesc(`${item.label}: ${item.description}`);
         paletteEl.querySelector('.el.active')?.scrollIntoView({ inline: 'center', block: 'nearest' });
       }
+      return current;
     },
   };
 }

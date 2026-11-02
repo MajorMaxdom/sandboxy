@@ -3,7 +3,8 @@ import { CHARGE_MAX } from '../elements/props';
 import type { Simulation } from './simulation';
 
 export type Tool =
-  | { kind: 'element'; id: number }
+  /** param: the element's toolbar option (laser color, firework filling), stored in `life`. */
+  | { kind: 'element'; id: number; param?: number }
   | { kind: 'erase' }
   | { kind: 'heat' }
   | { kind: 'cool' }
@@ -38,10 +39,19 @@ export function paintCircle(sim: Simulation, cx: number, cy: number, tool: Tool,
             if (sim.charge[j] === 0) sim.charge[j] = CHARGE_MAX;
             break;
           }
-          if (t === id) break;
+          const param = tool.param;
+          if (t === id) {
+            // Same element, other setting: e.g. recolor a laser.
+            if (param !== undefined && sim.life[j] !== param) {
+              sim.life[j] = param;
+              sim.wake(j);
+            }
+            break;
+          }
           if (t !== 0 && !opt.replace) break;
           if (!opt.solid && rng.next() > P.paintChance[id]) break;
           sim.spawn(j, id);
+          if (param !== undefined) sim.life[j] = param;
           break;
         }
         case 'erase':

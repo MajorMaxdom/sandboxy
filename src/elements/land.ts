@@ -1,4 +1,8 @@
 import type { ElementDef } from '../sim/types';
+import { ID } from './ids';
+
+/** Temperature glowing coal holds while it burns down. */
+const EMBER_TEMP = 1100;
 
 export const land: ElementDef[] = [
   {
@@ -99,7 +103,45 @@ export const land: ElementDef[] = [
     density: 140,
     conductivity: 0.2,
     heatCap: 2,
-    burn: { ignite: 350, chance: 0.0015, into: ['fire', 'ash', 'ash'], heat: 1100, spread: 0.15 },
-    description: 'Glüht lange und sehr heiß.',
+    windFactor: 0,
+    // Once it's red hot it turns into glowing ember, which does the long burn.
+    burn: { ignite: 350, chance: 0.02, into: 'ember', heat: EMBER_TEMP, spread: 0.03 },
+    description: 'Brennt sehr langsam und heiß ab: Angezündet wird sie zu Glut, die über eine Minute bei 1100 °C glüht. Wasser löscht sie.',
+  },
+  {
+    key: 'ember',
+    label: 'Glut',
+    category: 'hidden',
+    color: ['#ff6a1a', '#d93d0b', '#ffa040', '#b8320a'],
+    state: 'powder',
+    density: 140,
+    conductivity: 0.3,
+    heatCap: 2,
+    windFactor: 0,
+    defaultTemp: EMBER_TEMP,
+    lifespan: [3600, 7200],
+    decayInto: 'ash',
+    glow: true,
+    update(sim, i, x, y) {
+      const { w, type, rng } = sim;
+      // Water puts it out: back to (warm) coal, the water hisses off as steam.
+      for (const j of sim.neighbors4(x, y)) {
+        const t = type[j];
+        if (t === ID.water || t === ID['salt water']) {
+          sim.transform(j, ID.steam);
+          sim.transform(i, ID.coal);
+          sim.temp[i] = 100;
+          return true;
+        }
+      }
+      if (sim.temp[i] < EMBER_TEMP) sim.temp[i] = EMBER_TEMP;
+      // Now and then a small flame or a wisp of smoke rises.
+      if (y > 0 && type[i - w] === 0) {
+        const r = rng.next();
+        if (r < 0.015) sim.transform(i - w, ID.fire);
+        else if (r < 0.02) sim.transform(i - w, ID.smoke);
+      }
+      return false;
+    },
   },
 ];

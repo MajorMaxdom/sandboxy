@@ -1,9 +1,10 @@
 import type { ElementDef } from '../sim/types';
 import type { Simulation } from '../sim/simulation';
 import { ID } from './ids';
-import { P } from './props';
+import { P, GAS } from './props';
 import { fanUpdate, windAt } from '../sim/wind';
 import { pulse } from '../sim/radiation';
+import { DEFAULT_LASER, rgb565Lut } from './color';
 
 /** Energy a generator must collect before it sends one electric pulse. */
 const PULSE_COST = 40;
@@ -48,11 +49,77 @@ function fan(key: string, label: string, arrow: string, dx: number, dy: number):
   };
 }
 
+/** Heat a laser puts into the cell it hits, per tick, and the most it heats it to. */
+export const LASER_HEAT = 25;
+const LASER_MAX_TEMP = 3000;
+/** Ticks a wired laser stays on after a pulse (kept in shade bits 2–7). */
+const LASER_HOLD = 15;
+
+/**
+ * Laser: shines a beam of its color (RGB565 in `life`) until it hits matter,
+ * which it heats. Empty space, gases and glass let the light through.
+ */
+function laser(key: string, label: string, arrow: string, dx: number, dy: number): ElementDef {
+  return {
+    key,
+    label: `Laser ${arrow}`,
+    category: 'tech',
+    color: ['#3b3f46', '#3b3f46', '#3b3f46', '#3b3f46'],
+    state: 'static',
+    density: 3000,
+    conductivity: 0.3,
+    option: 'color',
+    update(sim, i, x, y) {
+      // Wired to a conductor? Then it only shines while current arrives.
+      let wired = false;
+      let hold = sim.shade[i] >> 2;
+      for (const j of sim.neighbors4(x, y)) {
+        if (!P.conducts[sim.type[j]]) continue;
+        wired = true;
+        if (sim.charge[j] > 0) hold = LASER_HOLD;
+      }
+      if (wired) {
+        if (hold === 0) {
+          sim.shade[i] &= 3;
+          return false;
+        }
+        hold--;
+      }
+      sim.shade[i] = (sim.shade[i] & 3) | (hold << 2);
+
+      const { w, h, type, temp, beam } = sim;
+      const color = rgb565Lut()[sim.life[i] || DEFAULT_LASER];
+      const glass = ID.glass;
+      let cx = x + dx;
+      let cy = y + dy;
+      while (cx >= 0 && cy >= 0 && cx < w && cy < h) {
+        const j = cy * w + cx;
+        const t = type[j];
+        if (t === 0 || t === glass || P.state[t] === GAS) {
+          beam[j] = color;
+        } else {
+          if (temp[j] < LASER_MAX_TEMP) temp[j] = Math.min(LASER_MAX_TEMP, temp[j] + LASER_HEAT);
+          break;
+        }
+        cx += dx;
+        cy += dy;
+      }
+      sim.beamUsed = true;
+      return false;
+    },
+    description: `Strahlt Licht in der gewählten Farbe ${label}. Erhitzt, was er trifft (zündet Holz, schmilzt Eis); Glas lässt das Licht durch. Mit Kabel verbunden leuchtet er nur unter Strom.`,
+  };
+}
+
 export const tech: ElementDef[] = [
   fan('fan right', 'nach rechts', '→', 1, 0),
   fan('fan left', 'nach links', '←', -1, 0),
   fan('fan up', 'nach oben', '↑', 0, -1),
   fan('fan down', 'nach unten', '↓', 0, 1),
+  laser('laser right', 'nach rechts', '→', 1, 0),
+  laser('laser left', 'nach links', '←', -1, 0),
+  laser('laser up', 'nach oben', '↑', 0, -1),
+  laser('laser down', 'nach unten', '↓', 0, 1),
   {
     key: 'wind turbine',
     label: 'Windrad',
