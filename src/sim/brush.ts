@@ -1,5 +1,5 @@
 import { P, ID } from '../elements/registry';
-import { CHARGE_MAX, POWDER, LIQUID } from '../elements/props';
+import { CHARGE_MAX, POWDER, LIQUID, GAS } from '../elements/props';
 import type { Simulation } from './simulation';
 
 export type Tool =
@@ -10,6 +10,8 @@ export type Tool =
   | { kind: 'cool' }
   /** Wind gust in the direction the brush is dragged (see blowCircle). */
   | { kind: 'wind' }
+  /** Fan / pump / pipe whose direction follows the drawing (resolved in main.ts). */
+  | { kind: 'directional'; group: string; param?: number }
   | { kind: 'toggle' };
 
 export interface BrushOptions {
@@ -18,6 +20,8 @@ export interface BrushOptions {
   replace: boolean;
   /** Fill every cell (shapes) instead of the speckled spray of loose stuff. */
   solid?: boolean;
+  /** Turn cells of the same directional family (pipe ← into pipe →) instead of skipping them. */
+  reorient?: boolean;
 }
 
 export function paintCircle(sim: Simulation, cx: number, cy: number, tool: Tool, opt: BrushOptions): void {
@@ -48,6 +52,21 @@ export function paintCircle(sim: Simulation, cx: number, cy: number, tool: Tool,
               sim.life[j] = param;
               sim.wake(j);
             }
+            break;
+          }
+          if (opt.reorient && t !== 0 && P.dirGroup[t] !== 0 && P.dirGroup[t] === P.dirGroup[id]) {
+            // Drawing a turn: the cell keeps its content / strength, only its direction changes.
+            type[j] = id;
+            if (param !== undefined) sim.life[j] = param;
+            sim.wake(j);
+            break;
+          }
+          if (P.holdsContent[id] && t !== 0 && !P.holdsContent[t] && (P.state[t] === LIQUID || P.state[t] === GAS)) {
+            // A pipe can be laid right into a pool: the liquid becomes its content.
+            const temp0 = temp[j];
+            sim.spawn(j, id);
+            sim.life[j] = t;
+            temp[j] = temp0;
             break;
           }
           if (t !== 0 && !opt.replace) break;

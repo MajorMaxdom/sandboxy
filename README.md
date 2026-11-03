@@ -24,8 +24,9 @@ npm run build    # Produktions-Build nach dist/
 - **Temperatur:** Wärmeleitung, Schmelzen, Gefrieren, Verdampfen, Brennen
 - **Bewegung:** Fallen mit Beschleunigung, Explosionen schleudern Trümmer ballistisch
 - **Luft:** Druck und Strömung (auf einem 2×2-groben Raster): Druckwellen, Gebläse treiben Luft durch Röhren
+- **Transport:** Rohre leiten Flüssigkeiten, Pulver und Gase in ihre Richtung, Pumpen drücken Flüssigkeit hinein oder eine Säule hinauf. Mit „Rohr ✎“, „Pumpe ✎“ und „Gebläse ✎“ folgt die Richtung dem Zeichnen.
 - **Strom:** Impulse durch Leiter; Batterie, Generatoren (Windrad, Dampfturbine), Lampen
-- **Logik:** Schalter, Taktgeber, Berührungs-/Hitze-/Lichtsensor, Diode, Verzögerer, NICHT-, UND-, ODER-, XOR-Gatter und Flipflop (Gatter zeigen nach rechts: Eingang links bzw. oben/unten, Ausgang rechts). Gebläse, Laser und Wasserhahn mit Kabel laufen nur unter Strom.
+- **Logik:** Schalter, Taktgeber, Berührungs-/Hitze-/Lichtsensor, Diode, Verzögerer, NICHT-, UND-, ODER-, XOR-Gatter und Flipflop (Gatter zeigen nach rechts: Eingang links bzw. oben/unten, Ausgang rechts). Gebläse, Pumpen, Laser und Wasserhahn mit Kabel laufen nur unter Strom.
 - **Laser** (Technik, 4 Richtungen): Farbe frei wählbar, der Strahl erhitzt, was er trifft, und geht durch Glas. Mit anderer Farbe über einen Laser malen färbt ihn um. **Spiegel** ╱ ╲ lenken ihn um, **Farbfilter** lassen nur ihre Farbe durch, **Solarzelle** und **Lichtsensor** machen aus Licht Strom.
 - **Feuer und Chemie:** Sauerstoff facht Feuer an, CO₂ sinkt zu Boden und erstickt es, Lauge neutralisiert Säure, Alkohol brennt blau, Wachs schmilzt schon bei 60 °C, Ton wird im Feuer zu Ziegel.
 - **Technik:** Wasserhahn (gibt ein wählbares Element aus), Förderbänder.

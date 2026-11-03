@@ -1,7 +1,7 @@
 import type { ElementDef } from '../sim/types';
 import type { Simulation } from '../sim/simulation';
 import { ID } from './ids';
-import { P, GAS, STATIC, LIGHT_PASS, LIGHT_SLASH, LIGHT_BACKSLASH, LIGHT_FILTER } from './props';
+import { P, GAS, LIQUID, POWDER, STATIC, LIGHT_PASS, LIGHT_SLASH, LIGHT_BACKSLASH, LIGHT_FILTER } from './props';
 import { fanUpdate, windAt } from '../sim/wind';
 import { pulse } from '../sim/radiation';
 import { rgb565Lut } from './color';
@@ -26,6 +26,7 @@ function fan(key: string, label: string, arrow: string, dx: number, dy: number):
     key,
     label: `Gebläse ${arrow}`,
     category: 'tech',
+    dirGroup: 'fan',
     color: ['#5b6b7a', '#7a8b9b', '#5b6b7a', '#7a8b9b'],
     state: 'static',
     density: 3000,
@@ -45,6 +46,217 @@ function fan(key: string, label: string, arrow: string, dx: number, dy: number):
   };
 }
 
+/** Longest column of fluid a pump or pipe outlet pushes ahead of itself. */
+const PUSH_MAX = 64;
+
+/**
+ * Put a particle `id` (with temperature `temp`) into cell j. If j holds a
+ * liquid or gas, the column ahead (direction dx, dy) is shifted on by one to
+ * make room, like a pump pushing water up a tube. Returns false if blocked.
+ */
+function pushInto(sim: Simulation, j: number, dx: number, dy: number, id: number, temp: number): boolean {
+  const { w, type } = sim;
+  const step = dy * w + dx;
+  if (type[j] !== 0) {
+    const st = P.state[type[j]];
+    if (st !== LIQUID && st !== GAS) return false;
+    let x = j % w;
+    let y = (j - x) / w;
+    let k = 0;
+    for (;;) {
+      k++;
+      x += dx;
+      y += dy;
+      if (k > PUSH_MAX || !sim.inBounds(x, y)) return false;
+      const t = type[j + k * step];
+      if (t === 0) break;
+      const s = P.state[t];
+      if (s !== LIQUID && s !== GAS) return false;
+    }
+    for (let m = k; m >= 1; m--) sim.swap(j + (m - 1) * step, j + m * step);
+  }
+  sim.spawn(j, id);
+  sim.temp[j] = temp;
+  return true;
+}
+
+/** Can this cell's particle be sucked into a pipe or pump? */
+function loose(t: number, liquidsOnly: boolean): boolean {
+  if (t === 0 || P.holdsContent[t]) return false;
+  const st = P.state[t];
+  return st === LIQUID || (!liquidsOnly && (st === POWDER || st === GAS));
+}
+
+/** Chance per tick that an open pipe start sucks in what's next to it. */
+const PIPE_INTAKE = 0.5;
+
+/**
+ * Pipe flowing in direction (dx, dy). Each cell carries one particle (its
+ * element id in `life`) and hands it on to the cell in front once that one is
+ * free. The first cell of a pipe sucks in loose matter from behind or the
+ * sides; the last one lets it out in front (or to a side, if the front is
+ * solid). A pipe drawn with "Rohr ✎" follows the stroke, so it can turn.
+ */
+function pipe(key: string, arrow: string, dx: number, dy: number): ElementDef {
+  return {
+    key,
+    label: `Rohr ${arrow}`,
+    category: 'tech',
+    dirGroup: 'pipe',
+    color: ['#4a5058', '#444a52', '#50565e', '#40464e'],
+    state: 'static',
+    density: 3000,
+    conductivity: 0.3,
+    calm: true,
+    holdsContent: true,
+    update(sim, i, x, y) {
+      const { w, type, life } = sim;
+      const content = life[i];
+      if (content === 0) {
+        // Only the start of a pipe takes things in: nothing behind it flows into it.
+        const bx = x - dx;
+        const by = y - dy;
+        if (sim.inBounds(bx, by) && P.holdsContent[type[by * w + bx]] && pipeFlowsInto(type[by * w + bx], bx, by, i, w)) return false;
+        for (const [ox, oy] of [[-dx, -dy], [dy, dx], [-dy, -dx]]) {
+          const nx = x + ox;
+          const ny = y + oy;
+          if (!sim.inBounds(nx, ny)) continue;
+          const j = ny * w + nx;
+          if (!loose(type[j], false)) continue;
+          sim.wake(i);
+          if (sim.rng.next() >= PIPE_INTAKE) return false;
+          life[i] = type[j];
+          sim.temp[i] = sim.temp[j];
+          sim.spawn(j, 0);
+          return false;
+        }
+        return false;
+      }
+      sim.wake(i);
+      const fx = x + dx;
+      const fy = y + dy;
+      if (sim.inBounds(fx, fy)) {
+        const f = fy * w + fx;
+        if (P.holdsContent[type[f]]) {
+          // On to the next pipe cell, once it's free.
+          if (life[f] === 0) {
+            life[f] = content;
+            life[i] = 0;
+            const t = sim.temp[f];
+            sim.temp[f] = sim.temp[i];
+            sim.temp[i] = t;
+            sim.clock[f] = sim.parity; // one cell per tick
+            sim.wake(f);
+          }
+          return false;
+        }
+        if (pushInto(sim, f, dx, dy, content, sim.temp[i])) {
+          life[i] = 0;
+          return false;
+        }
+        if (P.state[type[f]] !== STATIC) return false; // wait for the way to clear
+      }
+      // Outlet against a wall: let it out to a side instead.
+      const side = sim.rng.next() < 0.5 ? 1 : -1;
+      for (const s of [side, -side]) {
+        const nx = x + dy * s;
+        const ny = y + dx * s;
+        if (!sim.inBounds(nx, ny)) continue;
+        const j = ny * w + nx;
+        if (P.holdsContent[type[j]]) continue;
+        if (pushInto(sim, j, dy * s, dx * s, content, sim.temp[i])) {
+          life[i] = 0;
+          return false;
+        }
+      }
+      return false;
+    },
+    description: `Leitet Flüssigkeiten, Pulver und Gase ${arrow}. Der Anfang saugt an, was dahinter oder daneben liegt, am Ende kommt es heraus. Mit „Rohr ✎“ folgt die Richtung dem Zeichnen.`,
+  };
+}
+
+/** Does the pipe of type `t` at (bx, by) flow into cell i? */
+function pipeFlowsInto(t: number, bx: number, by: number, i: number, w: number): boolean {
+  const d = pipeDir(t);
+  return d !== null && (by + d[1]) * w + bx + d[0] === i;
+}
+
+/** Flow direction of a pipe element (ids are only known once the registry is built). */
+export function pipeDir(t: number): readonly [number, number] | null {
+  if (t === ID['pipe right']) return [1, 0];
+  if (t === ID['pipe left']) return [-1, 0];
+  if (t === ID['pipe up']) return [0, -1];
+  if (t === ID['pipe down']) return [0, 1];
+  return null;
+}
+
+/** Liquid a pump moves per tick at strength 5 (scales with the strength). */
+const PUMP_RATE = 1;
+
+/**
+ * Pump in direction (dx, dy): takes liquid from behind (or out of a pipe
+ * ending there) and pushes it out in front: into a pipe, into free space, or
+ * up a column of liquid. Strength 1–10 in `life`.
+ */
+function pump(key: string, label: string, arrow: string, dx: number, dy: number): ElementDef {
+  return {
+    key,
+    label: `Pumpe ${arrow}`,
+    category: 'tech',
+    dirGroup: 'pump',
+    color: ['#2f5f8a', '#3a6d99', '#2f5f8a', '#3a6d99'],
+    state: 'static',
+    density: 3000,
+    conductivity: 0.3,
+    option: 'level',
+    optionKey: 'pump',
+    optionLabel: 'Stärke',
+    optionDefault: '5',
+    update(sim, i, x, y) {
+      if (!poweredOrUnwired(sim, i, x, y)) return false;
+      const { w, type, life } = sim;
+      const bx = x - dx;
+      const by = y - dy;
+      const fx = x + dx;
+      const fy = y + dy;
+      if (!sim.inBounds(bx, by) || !sim.inBounds(fx, fy)) return false;
+      const b = by * w + bx;
+      const f = fy * w + fx;
+      const level = Math.min(10, life[i] || 5);
+      const rate = (PUMP_RATE * level) / 5;
+      let n = Math.floor(rate) + (sim.rng.next() < rate % 1 ? 1 : 0);
+      let moved = false;
+      while (n-- > 0) {
+        // Take: from a pipe ending here, or loose liquid behind the pump.
+        let id = 0;
+        const fromPipe = P.holdsContent[type[b]] !== 0;
+        if (fromPipe) id = life[b];
+        else if (loose(type[b], true)) id = type[b];
+        if (id === 0) break;
+        const temp = sim.temp[b];
+        // Give: into a pipe in front, or push it out.
+        if (P.holdsContent[type[f]]) {
+          if (life[f] !== 0) break;
+          life[f] = id;
+          sim.temp[f] = temp;
+          sim.wake(f);
+        } else if (!pushInto(sim, f, dx, dy, id, temp)) break;
+        if (fromPipe) life[b] = 0;
+        else sim.spawn(b, 0);
+        sim.wake(b);
+        moved = true;
+      }
+      if (moved) {
+        const s = sim.shade[i];
+        sim.shade[i] = (s & ~3) | ((s + 1) & 3); // turning
+      }
+      sim.wake(i);
+      return false;
+    },
+    description: `Pumpt Flüssigkeit ${label}: saugt sie hinten an und drückt sie vorne heraus, auch in ein Rohr oder eine Wassersäule hinauf. Stärke 1–10 unter der Palette, mit Kabel nur unter Strom.`,
+  };
+}
+
 /** Heat a laser puts into the cell it hits, per tick, and the most it heats it to. */
 export const LASER_HEAT = 25;
 const LASER_MAX_TEMP = 3000;
@@ -60,7 +272,10 @@ function poweredOrUnwired(sim: Simulation, i: number, x: number, y: number): boo
   let wired = false;
   let hold = sim.shade[i] >> 2;
   for (const j of sim.neighbors4(x, y)) {
-    if (!P.conducts[sim.type[j]]) continue;
+    // Only solid conductors count as wiring: water conducts too, but a pump
+    // or fan standing in water isn't "wired" to it.
+    const t = sim.type[j];
+    if (!P.conducts[t] || P.state[t] !== STATIC) continue;
     wired = true;
     if (sim.charge[j] > 0) hold = POWER_HOLD;
   }
@@ -199,6 +414,14 @@ export const tech: ElementDef[] = [
   fan('fan left', 'nach links', '←', -1, 0),
   fan('fan up', 'nach oben', '↑', 0, -1),
   fan('fan down', 'nach unten', '↓', 0, 1),
+  pump('pump right', 'nach rechts', '→', 1, 0),
+  pump('pump left', 'nach links', '←', -1, 0),
+  pump('pump up', 'nach oben', '↑', 0, -1),
+  pump('pump down', 'nach unten', '↓', 0, 1),
+  pipe('pipe right', '→', 1, 0),
+  pipe('pipe left', '←', -1, 0),
+  pipe('pipe up', '↑', 0, -1),
+  pipe('pipe down', '↓', 0, 1),
   laser('laser right', 'nach rechts', '→', 1, 0),
   laser('laser left', 'nach links', '←', -1, 0),
   laser('laser up', 'nach oben', '↑', 0, -1),

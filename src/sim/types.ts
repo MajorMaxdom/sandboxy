@@ -89,6 +89,14 @@ export interface ElementDef {
   resistance?: number;
   /** Rendered with its own colors instead of the generic "charged" yellow (lamps). */
   lightsUp?: boolean;
+  /** Carries another element's id in `life` (pipes): drawn tinted with it, remapped on load. */
+  holdsContent?: boolean;
+  /**
+   * Directional family ('fan', 'pump', 'pipe'): members are keyed
+   * "<group> right|left|up|down". The "✎" tool picks the member from the
+   * drawing direction and turns cells of the same family it paints over.
+   */
+  dirGroup?: string;
   /** Logic component: never heated by passing current, may receive gate signals. */
   logic?: boolean;
 

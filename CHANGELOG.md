@@ -6,6 +6,16 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.10.0] – 2026-11-03
+
+### Neu
+- **Rohr → ← ↑ ↓** (Technik): leitet Flüssigkeiten, Pulver und Gase Zelle für Zelle in seine Richtung. Der Anfang saugt an, was hinter oder neben ihm liegt, am Ende kommt es heraus (ist dort eine Wand, seitlich). Man sieht, was gerade durch das Rohr fließt. Rohre lassen sich direkt in eine Wasserfläche hinein malen.
+- **Pumpe → ← ↑ ↓** (Technik): saugt Flüssigkeit hinten an und drückt sie vorne heraus, in ein Rohr, ins Freie oder eine Wassersäule hinauf. Stärke 1–10 unter der Palette, mit Kabel nur unter Strom.
+- **Zeichenrichtung (✎):** „Gebläse ✎“, „Pumpe ✎“ und „Rohr ✎“ nehmen die Richtung aus der Zeichenbewegung. Ein gezogenes Rohr fließt so, wie es gemalt wurde, auch um Ecken. Ein Tipp setzt eines in die zuletzt gezeichnete Richtung, mit dem Linienwerkzeug gilt die Richtung der Linie.
+
+### Behoben
+- Gebläse, Laser, Wasserhahn und Pumpe hielten Wasser neben sich für ein Kabel und liefen dann nur unter Strom. Als Kabel zählen jetzt nur feste Leiter.
+
 ## [0.9.0] – 2026-11-03
 
 ### Geändert
@@ -129,7 +139,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.9.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.7.0...v0.8.0

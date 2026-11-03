@@ -63,6 +63,9 @@ export const P = {
   conducts: new Uint8Array(0),
   resist: new Float32Array(0),
   lightsUp: new Uint8Array(0),
+  holdsContent: new Uint8Array(0),
+  /** Directional family number (0 = none), see ElementDef.dirGroup. */
+  dirGroup: new Uint8Array(0),
   /** Rendered in the RGB565 color stored in `life` (1), or darker (2). */
   ownColor: new Uint8Array(0),
   /** `life` holds an element id (clone, firework, converter …): remapped on load. */

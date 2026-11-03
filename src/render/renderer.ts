@@ -121,6 +121,7 @@ export class Renderer {
       const defaultParam = P.defaultParam;
       const state = P.state;
       const light = P.light;
+      const holds = P.holdsContent;
       for (let i = 0; i < size; i++) {
         const id = type[i];
         const c = charge[i];
@@ -133,6 +134,9 @@ export class Renderer {
           buf[i] = (ownColor[id] === 2 ? ownDim : own)[life[i] || defaultParam[id]];
         } else if (c > 0 && id !== 0 && !lightsUp[id]) {
           buf[i] = c >= CHARGE_MAX - 2 ? CHARGE_COLOR : CHARGE_DIM;
+        } else if (holds[id] && life[i] !== 0) {
+          // A pipe shows what's flowing through it.
+          buf[i] = mix(colors[life[i] * 4 + (shade[i] & 3)], colors[id * 4 + (shade[i] & 3)]);
         } else if (glow[id]) {
           buf[i] = colors[id * 4 + ((Math.random() * 4) | 0)];
         } else {

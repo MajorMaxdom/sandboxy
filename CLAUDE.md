@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 152 Tests, alle grün
+npm test             # Vitest, aktuell 159 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.
@@ -42,6 +42,9 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - **Temperatur bei Umwandlungen:** `transform()` hebt heiße Produkte auf ihre `defaultTemp` an (bzw. senkt kalte), Phasenübergänge nutzen `keepTemp = true`.
 - **Gas verdrängen:** `swap()` markiert Gas, das Materie gerade zur Seite geschoben hat (`sim.pushed` = `pushStamp`). Solches Gas darf im selben Tick nicht noch einmal verdrängt werden, und Flüssigkeiten tauschen seitwärts nur mit direkt benachbartem Gas, nicht mit Blasen unter einer Flüssigkeit. Verdrängte leere Luft verliert die Hälfte ihrer Überhitze. Ohne das reicht eine Zeile fließendes Öl Flammen und heiße Luft in einem Tick bis an den Rand weiter.
 - **Wind-Werkzeug:** `blowCircle()` (brush.ts) schreibt in `sim.windX/windY`, das im nächsten Tick als `windPrev` gelesen wird. `main.ts` hält die Stöße in `gusts` und wendet sie vor jedem Tick erneut an, abklingend über `GUST_TICKS`. Lose Pulver und Flüssigkeiten bekommen zusätzlich Geschwindigkeit (`vx/vy`), weil Wind allein sie kaum bewegt.
+- **Rohre und Pumpen** (tech.ts): Jede Rohrzelle trägt ein Teilchen als Element-ID in `life` (`holdsContent`, wird beim Laden umgemappt) und gibt es pro Tick an die Zelle in ihrer Richtung weiter. Eine Rohrzelle, in die kein Rohr hineinfließt, ist ein Anfang und saugt an. `pushInto()` schiebt Flüssigkeits- und Gassäulen vor sich her (Pumpe, Rohrende).
+- **Richtungsfamilien (`dirGroup`):** Gebläse, Pumpe und Rohr heißen `<group> right|left|up|down`. Das „✎“-Werkzeug (`kind: 'directional'`) wird in `main.ts` (`dirTool`, `dirOf`) pro Strichstück in das passende Element übersetzt. Mit `reorient` dreht der Pinsel vorhandene Zellen derselben Familie, statt sie zu überspringen; so entstehen Ecken.
+- **Kabel:** `poweredOrUnwired` zählt nur feste Leiter als Verkabelung, Wasser leitet zwar, gilt aber nicht als Kabel.
 - **Gebläse:** blasen nach vorne (`fanUpdate`, Stärke 1–10 in `life`) und saugen hinten an. `windTarget()` in `wind.ts` reicht Teilchen mit `windFactor` ≥ 0,2, die von hinten in Blasrichtung hineingedrückt werden, bis zur ersten freien Zelle vor dem Gebläse durch.
 - **Fallen mitziehen:** Fällt ein Teilchen frei, bekommt das gleichartige Teilchen direkt darüber sein Tempo (`dragAlong` in `movement.ts`). Sonst reißen gemalte Ströme in Balken auf, weil jede neue Zeile aus dem Stand startet.
 - **Frame-Budget:** `main.ts` simuliert pro Frame höchstens `SIM_BUDGET_MS` lang und verwirft den Rest, statt in eine Abwärtsspirale zu geraten. Die Statuszeile zeigt dann „Tempo … %“.
@@ -55,7 +58,7 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 
 ## Stand (02.11.2026)
 **Fertig:**
-- 131 malbare Elemente (plus 14 interne wie Strahlung, Rakete, Rost, Glut, blaue Flamme, Spinnennetz) in 12 Kategorien: Land, Feststoffe, Metalle, Flüssigkeiten, Gase, Energie, Technik, Logik, Strahlung, Leben, Sprengstoffe, Spezial, dazu der Tab Werkzeuge.
+- 139 malbare Elemente (plus 14 interne wie Strahlung, Rakete, Rost, Glut, blaue Flamme, Spinnennetz) in 12 Kategorien: Land, Feststoffe, Metalle, Flüssigkeiten, Gase, Energie, Technik, Logik, Strahlung, Leben, Sprengstoffe, Spezial, dazu der Tab Werkzeuge.
 - Temperatur, Strom, Wind, Luftdruck, Strahlung mit kritischer Masse, Geschwindigkeit/Trümmer und Mutationen.
 - Pixelgröße 1–12 px, Touch-Bedienung, Werkzeuge Linie/Rechteck/Füllen/Pipette, Undo/Redo.
 - Speichern/Laden, Teilen-Link und Demo-Szenen.

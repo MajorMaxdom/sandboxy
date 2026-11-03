@@ -393,7 +393,7 @@ describe('bookkeeping', () => {
         expect(d.description, d.key).toBeTruthy();
       }
     }
-    expect(n).toBe(131);
+    expect(n).toBe(139);
     expect(ELEMENTS.length).toBeLessThan(256);
   });
 

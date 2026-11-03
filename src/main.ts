@@ -156,7 +156,7 @@ let brush = Number(rngBrush.value);
 let stepRequests = 0;
 let shape: Shape = 'free';
 /** The stroke being drawn: where it started, where the pointer is now. */
-let stroke: { start: GridPoint; end: GridPoint; tool: Tool; shape: Shape } | null = null;
+let stroke: { start: GridPoint; end: GridPoint; tool: Tool; shape: Shape; painted?: boolean } | null = null;
 
 const history = new History(sim, () => {
   renderer.resize(sim.w, sim.h);
@@ -402,7 +402,7 @@ function handleInput(): void {
       return;
     }
     if (sh === 'fill') {
-      floodFill(sim, pts[0].x, pts[0].y, t, opt);
+      floodFill(sim, pts[0].x, pts[0].y, t.kind === 'directional' ? dirTool(t, lastDir) : t, opt);
       return;
     }
   }
@@ -421,9 +421,38 @@ function handleInput(): void {
     if (!input.down) finishStroke();
     return;
   }
+  if (t.kind === 'directional') {
+    // Each piece of the stroke gets the direction it was drawn in; the cell
+    // where the stroke turns is turned too (reorient), so pipes go round corners.
+    // Nothing is painted until the pointer moves (a tap is placed on release).
+    let a = prevEnd;
+    for (const b of pts) {
+      if (b.x === a.x && b.y === a.y) continue;
+      lastDir = dirOf(b.x - a.x, b.y - a.y);
+      paintLine(sim, a.x, a.y, b.x, b.y, dirTool(t, lastDir), { ...opt, reorient: true });
+      stroke.painted = true;
+      a = b;
+    }
+    if (!input.down) finishStroke();
+    return;
+  }
   if (pts.length === 1) paintLine(sim, pts[0].x, pts[0].y, pts[0].x, pts[0].y, t, opt);
   for (let k = 1; k < pts.length; k++) paintLine(sim, pts[k - 1].x, pts[k - 1].y, pts[k].x, pts[k].y, t, opt);
   if (!input.down) finishStroke();
+}
+
+type Dir = 'right' | 'left' | 'up' | 'down';
+/** Direction of the last "✎" stroke; a tap without movement uses it. */
+let lastDir: Dir = 'right';
+
+function dirOf(dx: number, dy: number): Dir {
+  return Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'down' : 'up';
+}
+
+/** The family member of a "✎" tool for one direction (e.g. "pipe up"). */
+function dirTool(t: Tool, dir: Dir): Tool {
+  if (t.kind !== 'directional') return t;
+  return { kind: 'element', id: ID[`${t.group} ${dir}`], param: t.param };
 }
 
 /** Wind tool gusts still blowing, and for how many more ticks. */
@@ -447,9 +476,16 @@ function blowGusts(): void {
 
 function finishStroke(): void {
   if (!stroke) return;
-  const { start: a, end: b, tool: t } = stroke;
+  const { start: a, end: b } = stroke;
+  let t = stroke.tool;
   const opt = { radius: brush, replace: chkReplace.checked, solid: true };
-  if (stroke.shape === 'line') paintLine(sim, a.x, a.y, b.x, b.y, t, opt);
+  if (t.kind === 'directional') {
+    if (stroke.shape === 'line' && (a.x !== b.x || a.y !== b.y)) lastDir = dirOf(b.x - a.x, b.y - a.y);
+    t = dirTool(t, lastDir);
+    // A tap with the free brush: place one in the last used direction.
+    if (stroke.shape === 'free' && !stroke.painted) paintCircle(sim, a.x, a.y, t, opt);
+  }
+  if (stroke.shape === 'line') paintLine(sim, a.x, a.y, b.x, b.y, t, { ...opt, reorient: true });
   else if (stroke.shape === 'rect') paintRect(sim, a.x, a.y, b.x, b.y, t, opt);
   stroke = null;
 }

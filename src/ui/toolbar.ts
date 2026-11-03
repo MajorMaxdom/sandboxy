@@ -18,14 +18,24 @@ const TOOLS: PaletteItem[] = [
   { label: 'Schalter umlegen', color: '#3fbf5a', description: 'Klick auf einen Schalter schaltet ihn an oder aus.', tool: { kind: 'toggle' } },
 ];
 
+/** "✎" tools whose direction follows the drawing, shown before their family. */
+const DIRECTIONAL: Record<string, { label: string; description: string }> = {
+  fan: { label: 'Gebläse ✎', description: 'Gebläse, das in die Richtung bläst, in die man zeichnet.' },
+  pump: { label: 'Pumpe ✎', description: 'Pumpe, die in die Richtung pumpt, in die man zeichnet.' },
+  pipe: { label: 'Rohr ✎', description: 'Rohr, das in Zeichenrichtung fließt, auch um Ecken. Der Anfang saugt an, am Ende kommt es heraus.' },
+};
+
 function itemsFor(category: string): PaletteItem[] {
   if (category === 'tools') return TOOLS;
-  return paletteElements(category as never).map((d) => ({
-    label: d.label,
-    color: baseColor(d),
-    description: d.description ?? '',
-    tool: { kind: 'element', id: ID[d.key] },
-  }));
+  const items: PaletteItem[] = [];
+  for (const d of paletteElements(category as never)) {
+    const g = d.dirGroup;
+    if (g && DIRECTIONAL[g] && d.key === `${g} right`) {
+      items.push({ ...DIRECTIONAL[g], color: baseColor(d), tool: { kind: 'directional', group: g } });
+    }
+    items.push({ label: d.label, color: baseColor(d), description: d.description ?? '', tool: { kind: 'element', id: ID[d.key] } });
+  }
+  return items;
 }
 
 function textColorFor(hex: string): string {
@@ -37,7 +47,10 @@ function textColorFor(hex: string): string {
 }
 
 function sameTool(a: Tool, b: Tool): boolean {
-  return a.kind === b.kind && (a.kind !== 'element' || a.id === (b as { id: number }).id);
+  if (a.kind !== b.kind) return false;
+  if (a.kind === 'element') return a.id === (b as { id: number }).id;
+  if (a.kind === 'directional') return a.group === (b as { group: string }).group;
+  return true;
 }
 
 const TAB_KEY = 'sandboxy.tab';
@@ -69,8 +82,10 @@ function saveOpts(): void {
 
 /** The element definition of a tool, if it has a toolbar option. */
 function optionDef(tool: Tool): ElementDef | undefined {
-  if (tool.kind !== 'element') return undefined;
-  const d = ELEMENTS[tool.id];
+  // A "✎" tool shares the option (fan strength …) of its family.
+  const id = tool.kind === 'element' ? tool.id : tool.kind === 'directional' ? ID[`${tool.group} right`] : undefined;
+  if (id === undefined) return undefined;
+  const d = ELEMENTS[id];
   return d.option ? d : undefined;
 }
 
@@ -88,7 +103,7 @@ function optValue(d: ElementDef): string {
 /** Attach the current option value to an element tool. */
 function withParam(tool: Tool): Tool {
   const d = optionDef(tool);
-  if (tool.kind !== 'element' || !d) return tool;
+  if ((tool.kind !== 'element' && tool.kind !== 'directional') || !d) return tool;
   const v = optValue(d);
   const param = d.option === 'color' ? hexToRgb565(v) : d.option === 'level' ? Number(v) : (ID[v] ?? 0);
   return { ...tool, param };

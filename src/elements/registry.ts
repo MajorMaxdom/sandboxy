@@ -139,6 +139,9 @@ function build(): void {
   P.resist = new Float32Array(n);
   P.restless = new Uint8Array(n);
   P.lightsUp = new Uint8Array(n);
+  P.holdsContent = new Uint8Array(n);
+  P.dirGroup = new Uint8Array(n);
+  const groups: string[] = [];
   P.ownColor = new Uint8Array(n);
   P.lifeIsElement = new Uint8Array(n);
   P.defaultParam = new Uint16Array(n);
@@ -223,7 +226,12 @@ function build(): void {
     P.restless[i] = d.state === 'gas' || !!d.lifespan || (!!d.update && !d.calm) || !!d.radioactive ? 1 : 0;
     P.lightsUp[i] = d.lightsUp ? 1 : 0;
     P.ownColor[i] = d.option === 'color' ? (d.dimOwnColor ? 2 : 1) : 0;
-    P.lifeIsElement[i] = d.option === 'element' || d.key === 'clone' ? 1 : 0;
+    P.holdsContent[i] = d.holdsContent ? 1 : 0;
+    if (d.dirGroup) {
+      if (!groups.includes(d.dirGroup)) groups.push(d.dirGroup);
+      P.dirGroup[i] = groups.indexOf(d.dirGroup) + 1;
+    }
+    P.lifeIsElement[i] = d.option === 'element' || d.key === 'clone' || d.holdsContent ? 1 : 0;
     P.light[i] =
       d.light === 'pass' ? LIGHT_PASS : d.light === 'mirror/' ? LIGHT_SLASH : d.light === 'mirror\\' ? LIGHT_BACKSLASH : d.light === 'filter' ? LIGHT_FILTER : LIGHT_ABSORB;
     P.onLight[i] = d.onLight;
