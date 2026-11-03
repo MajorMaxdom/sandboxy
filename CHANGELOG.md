@@ -6,6 +6,15 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.4.2] – 2026-11-03
+
+### Geändert
+- Die Version steht jetzt auch in der Statuszeile über der Spielfläche, also auch am Handy sichtbar.
+
+### Behoben
+- Öl fing an mehreren Stellen gleichzeitig Feuer, oft an den Rändern, statt nur dort, wo die Hitze ankam. Seitwärts fließendes Öl tauschte den Platz mit Flammen und heißer Luft bis zu 3 Zellen weit, und eine ganze Zeile Öl reichte sie so in einem Tick bis an den Rand weiter. Jetzt wird Gas pro Tick nur einmal und nur um eine Zelle verdrängt, und verdrängte Luft kühlt dabei ab.
+- Dampfblasen im Wasser wurden vom fließenden Wasser seitlich geschoben statt aufzusteigen.
+
 ## [0.4.1] – 2026-11-03
 
 ### Behoben
@@ -61,7 +70,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.1...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.0...v0.3.1

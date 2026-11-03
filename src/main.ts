@@ -472,7 +472,7 @@ function frame(now: number): void {
     ticks = 0;
     fpsTime = now;
     const zoom = view.zoom > 1 ? ` · Zoom ${view.zoom.toFixed(1).replace('.', ',')}×` : '';
-    statsEl.textContent = `${fps} FPS${slow} · ${sim.countParticles().toLocaleString('de-DE')} Partikel · ${sim.w}×${sim.h}${zoom}`;
+    statsEl.textContent = `${fps} FPS${slow} · ${sim.countParticles().toLocaleString('de-DE')} Partikel · ${sim.w}×${sim.h}${zoom} · v${APP_VERSION}`;
   }
 
   requestAnimationFrame(frame);

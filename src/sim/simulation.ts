@@ -28,6 +28,13 @@ export class Simulation {
   charge = new Uint8Array(0);
   shade = new Uint8Array(0);
   clock = new Uint8Array(0);
+  /**
+   * Gas pushed aside by a falling or flowing particle this tick (holds
+   * `pushStamp`). Such gas can't be pushed again in the same tick, otherwise
+   * a row of flowing oil hands one flame along the whole surface at once.
+   */
+  pushed = new Uint8Array(0);
+  pushStamp = 1;
 
   tick = 0;
   /** Marker for "already processed this tick"; alternates between 1 and 2. */
@@ -106,6 +113,7 @@ export class Simulation {
     this.charge = new Uint8Array(this.size);
     this.shade = new Uint8Array(this.size);
     this.clock = new Uint8Array(this.size);
+    this.pushed = new Uint8Array(this.size);
     this.windX = new Float32Array(this.size);
     this.windY = new Float32Array(this.size);
     this.windPrevX = new Float32Array(this.size);
@@ -266,6 +274,14 @@ export class Simulation {
     t = vy[a]; vy[a] = vy[b]; vy[b] = t;
     clock[a] = this.parity;
     clock[b] = this.parity;
+    // Mark gas that matter just pushed aside (not gas swapping with gas).
+    const ga = P.state[type[a]] === GAS;
+    if (ga !== (P.state[type[b]] === GAS)) this.pushed[ga ? a : b] = this.pushStamp;
+    // Air displaced by matter mixes on the way: it loses half its excess heat.
+    // Otherwise a row of flowing oil passes hot air along like a bucket
+    // chain and lights the surface far away from the fire.
+    else if (type[a] === 0 && !ga && type[b] !== 0) temp[a] = this.ambient + (temp[a] - this.ambient) * 0.5;
+    else if (type[b] === 0 && type[a] !== 0 && P.state[type[a]] !== GAS) temp[b] = this.ambient + (temp[b] - this.ambient) * 0.5;
     this.wake(a);
     this.wake(b);
   }
@@ -355,6 +371,7 @@ export class Simulation {
   step(): void {
     this.tick++;
     this.parity = (this.tick & 1) + 1;
+    this.pushStamp = (this.tick % 255) + 1;
     const { w, h, type, clock } = this;
     const parity = this.parity;
 

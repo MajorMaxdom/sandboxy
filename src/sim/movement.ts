@@ -6,7 +6,7 @@ function canSink(sim: Simulation, id: number, j: number): boolean {
   const t = sim.type[j];
   if (t === 0) return true;
   const st = P.state[t];
-  if (st === GAS) return true;
+  if (st === GAS) return sim.pushed[j] !== sim.pushStamp;
   if (st === LIQUID && P.density[t] < P.density[id]) {
     if (sim.rng.next() < 0.5) return true;
     sim.wake(j); // could still sink later
@@ -104,12 +104,17 @@ function dragAlong(sim: Simulation, j: number, id: number, speed: number): void 
   sim.vy[j] = speed - GRAVITY; // gravity is added back when it moves
 }
 
+/** Is a cell with this type above a gas cell a lid, i.e. the gas is a bubble? */
+function isCovered(t: number): boolean {
+  return t !== 0 && P.state[t] !== GAS;
+}
+
 /** Deterministic version of canSink, for deciding whether we're falling. */
 function isFree(sim: Simulation, id: number, j: number): boolean {
   const t = sim.type[j];
   if (t === 0) return true;
   const st = P.state[t];
-  return st === GAS || (st === LIQUID && P.density[t] < P.density[id]);
+  return (st === GAS && sim.pushed[j] !== sim.pushStamp) || (st === LIQUID && P.density[t] < P.density[id]);
 }
 
 export function movePowder(sim: Simulation, i: number, x: number, y: number, id: number): boolean {
@@ -175,7 +180,13 @@ export function moveLiquid(sim: Simulation, i: number, x: number, y: number, id:
       if (nx < 0 || nx >= w) break;
       const j = i + d * s;
       const t = type[j];
-      if (t !== 0 && P.state[t] !== GAS) break;
+      if (t !== 0) {
+        // Gas only gets pushed aside right next to us, and once per tick:
+        // swapping with gas further away would teleport it (flames!).
+        // Bubbles inside a liquid are left alone so they can rise.
+        if (s === 1 && P.state[t] === GAS && sim.pushed[j] !== sim.pushStamp && !(y > 0 && isCovered(type[j - w]))) target = j;
+        break;
+      }
       target = j;
       if (hasBelow && type[j + w] === 0) break;
     }
@@ -207,6 +218,11 @@ export function moveGas(sim: Simulation, i: number, x: number, y: number, id: nu
   const j = ny * w + nx;
   const t = type[j];
   if (t === 0) {
+    sim.swap(i, j);
+    return true;
+  }
+  // Bubbles rise through liquids on their own.
+  if (rising && dy === vy && P.state[t] === LIQUID) {
     sim.swap(i, j);
     return true;
   }
