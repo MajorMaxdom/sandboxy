@@ -47,6 +47,49 @@ export function signal(sim: Simulation, j: number): void {
   if ((P.conducts[t] && (t !== ID.switch || sim.life[j] !== 0)) || P.logic[t]) sim.charge[j] = CHARGE_MAX + 1;
 }
 
+/** Ticks a Geiger counter stays lit after a hit … */
+const GEIGER_FLASH = 20;
+/** … and below which a new hit lights it again. */
+const GEIGER_REFIRE = GEIGER_FLASH / 2;
+/** Largest counter (in cells) that lights up as one. */
+const GEIGER_MAX_CELLS = 20000;
+let geigerSeen = new Uint32Array(0);
+let geigerStamp = 0;
+let geigerStack = new Int32Array(0);
+
+/**
+ * Radiation hit the Geiger counter cell j: the whole connected counter
+ * lights up, and every cell of it sends a pulse into touching wires.
+ */
+function triggerGeiger(sim: Simulation, j: number): void {
+  if (sim.life[j] > GEIGER_REFIRE) return; // still lit from the last hit
+  const { w, h, type, size } = sim;
+  if (geigerSeen.length < size) {
+    geigerSeen = new Uint32Array(size);
+    geigerStack = new Int32Array(size);
+    geigerStamp = 0;
+  }
+  const stamp = ++geigerStamp;
+  let top = 0;
+  geigerStack[top++] = j;
+  geigerSeen[j] = stamp;
+  let n = 0;
+  while (top > 0 && n < GEIGER_MAX_CELLS) {
+    const i = geigerStack[--top];
+    n++;
+    sim.life[i] = GEIGER_FLASH;
+    sim.shade[i] = 2;
+    sim.wake(i);
+    const x = i % w;
+    const y = (i - x) / w;
+    pulse(sim, x, y);
+    if (x > 0 && type[i - 1] === ID.geiger && geigerSeen[i - 1] !== stamp) { geigerSeen[i - 1] = stamp; geigerStack[top++] = i - 1; }
+    if (x < w - 1 && type[i + 1] === ID.geiger && geigerSeen[i + 1] !== stamp) { geigerSeen[i + 1] = stamp; geigerStack[top++] = i + 1; }
+    if (y > 0 && type[i - w] === ID.geiger && geigerSeen[i - w] !== stamp) { geigerSeen[i - w] = stamp; geigerStack[top++] = i - w; }
+    if (y < h - 1 && type[i + w] === ID.geiger && geigerSeen[i + w] !== stamp) { geigerSeen[i + w] = stamp; geigerStack[top++] = i + w; }
+  }
+}
+
 /**
  * Radiation hits matter at j. Returns true if it was absorbed, false if it
  * scattered off.
@@ -78,9 +121,7 @@ export function hitMatter(sim: Simulation, j: number, t: number, x: number, y: n
       return false;
   }
   if (t === ID.geiger) {
-    sim.life[j] = 8;
-    sim.shade[j] = 2;
-    pulse(sim, x, y);
+    triggerGeiger(sim, j);
     return true;
   }
   const fc = P.fissionChance[t];

@@ -6,6 +6,11 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.5.1] – 2026-11-03
+
+### Behoben
+- **Geigerzähler (#6):** Ein Treffer ließ nur das eine getroffene Pixel für 8 Ticks aufblinken, ein gemalter Zähler blieb also praktisch dunkel. Jetzt leuchtet der ganze zusammenhängende Zähler etwa eine Drittelsekunde lang auf. Jede seiner Zellen gibt den Stromimpuls an angrenzende Leiter ab, ein Kabel kann also an jeder Seite angeschlossen sein. Getrennte Zähler bleiben unabhängig.
+
 ## [0.5.0] – 2026-11-03
 
 ### Geändert
@@ -78,7 +83,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.0...v0.4.1

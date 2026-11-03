@@ -45,6 +45,28 @@ describe('radioactivity', () => {
     expect(charged).toBe(true);
   });
 
+  it('a hit lights the whole connected Geiger counter and every wire touching it', () => {
+    const sim = makeSim(40, 20);
+    for (let x = 0; x < 6; x++) for (let y = 6; y < 14; y++) put(sim, x, y, 'uranium');
+    // A 10×10 counter; a wire touches only its far (right) side.
+    for (let x = 12; x < 22; x++) for (let y = 5; y < 15; y++) put(sim, x, y, 'geiger');
+    for (let y = 0; y < 20; y++) put(sim, 22, y, 'copper');
+    // A separate counter that isn't connected stays dark.
+    for (let x = 30; x < 33; x++) for (let y = 0; y < 3; y++) put(sim, x, y, 'geiger');
+    let allLit = false;
+    let wire = false;
+    for (let t = 0; t < 3000 && !(allLit && wire); t++) {
+      sim.step();
+      let lit = 0;
+      for (let x = 12; x < 22; x++) for (let y = 5; y < 15; y++) if (sim.shade[y * 40 + x] === 2) lit++;
+      if (lit === 100) allLit = true;
+      for (let y = 0; y < 20; y++) if (sim.charge[y * 40 + 22] > 0) wire = true;
+    }
+    expect(allLit).toBe(true);
+    expect(wire).toBe(true);
+    for (let x = 30; x < 33; x++) for (let y = 0; y < 3; y++) expect(sim.shade[y * 40 + x]).toBe(0);
+  });
+
   it('radiation kills plants', () => {
     const sim = makeSim(30, 10);
     for (let x = 0; x < 8; x++) for (let y = 2; y < 8; y++) put(sim, x, y, 'plutonium');

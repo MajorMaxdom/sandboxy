@@ -113,7 +113,7 @@ export const nuclear: ElementDef[] = [
       if (l > 0) sim.life[i] = l - 1;
       sim.shade[i] = l > 1 ? 2 : 0;
     },
-    description: 'Blinkt bei Strahlung und gibt dann einen Stromimpuls an angrenzende Leiter ab.',
+    description: 'Leuchtet bei Strahlung als Ganzes auf und gibt einen Stromimpuls an alle angrenzenden Leiter ab.',
   },
   {
     key: 'radiation',
