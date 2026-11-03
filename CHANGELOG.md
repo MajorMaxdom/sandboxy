@@ -6,6 +6,14 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.7.0] – 2026-11-03
+
+### Neu
+- **Gebläse saugen an und sind durchlässig:** Hinter einem Gebläse entsteht ein kürzerer Sog (gut ein Drittel der Reichweite). Was der Wind von hinten in das Gebläse drückt, kommt vorne wieder heraus, auch durch dicke Gebläse-Flächen. Das gilt für Gase und leichte Teilchen wie Asche oder Schnee. Sand, Wasser und Feststoffe bleiben liegen, von der Seite und von vorne ist ein Gebläse weiterhin eine Wand.
+
+### Behoben
+- Hinter Gebläsen sammelten sich Gase: Der Unterdruck saugte sie an, aber durch das Gebläse kamen sie nicht hindurch.
+
 ## [0.6.0] – 2026-11-03
 
 ### Neu
@@ -98,7 +106,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.6.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.0...v0.5.1

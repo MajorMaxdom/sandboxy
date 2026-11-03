@@ -41,7 +41,7 @@ function fan(key: string, label: string, arrow: string, dx: number, dy: number):
       sim.shade[i] = (s & ~3) | ((s + 1) & 3); // spinning blades
       return update(sim, i, x, y);
     },
-    description: `Bläst Wind ${label} und erzeugt Luftströmung, die Röhren folgt. Stärke 1–10 unter der Palette. Mit Kabel verbunden läuft es nur unter Strom.`,
+    description: `Saugt hinten an und bläst ${label}. Gase und Leichtes gehen hindurch. Stärke 1–10 unter der Palette, mit Kabel nur unter Strom.`,
   };
 }
 

@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 144 Tests, alle grün
+npm test             # Vitest, aktuell 146 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.
@@ -41,6 +41,7 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - **Kohle → Glut:** Kohle wird beim Brennen zu `ember` (intern), die 60–120 s bei 1100 °C glüht, Flammen aufsteigen lässt und zu Asche zerfällt. Wasser löscht Glut zurück zu Kohle.
 - **Temperatur bei Umwandlungen:** `transform()` hebt heiße Produkte auf ihre `defaultTemp` an (bzw. senkt kalte), Phasenübergänge nutzen `keepTemp = true`.
 - **Gas verdrängen:** `swap()` markiert Gas, das Materie gerade zur Seite geschoben hat (`sim.pushed` = `pushStamp`). Solches Gas darf im selben Tick nicht noch einmal verdrängt werden, und Flüssigkeiten tauschen seitwärts nur mit direkt benachbartem Gas, nicht mit Blasen unter einer Flüssigkeit. Verdrängte leere Luft verliert die Hälfte ihrer Überhitze. Ohne das reicht eine Zeile fließendes Öl Flammen und heiße Luft in einem Tick bis an den Rand weiter.
+- **Gebläse:** blasen nach vorne (`fanUpdate`, Stärke 1–10 in `life`) und saugen hinten an. `windTarget()` in `wind.ts` reicht Teilchen mit `windFactor` ≥ 0,2, die von hinten in Blasrichtung hineingedrückt werden, bis zur ersten freien Zelle vor dem Gebläse durch.
 - **Fallen mitziehen:** Fällt ein Teilchen frei, bekommt das gleichartige Teilchen direkt darüber sein Tempo (`dragAlong` in `movement.ts`). Sonst reißen gemalte Ströme in Balken auf, weil jede neue Zeile aus dem Stand startet.
 - **Frame-Budget:** `main.ts` simuliert pro Frame höchstens `SIM_BUDGET_MS` lang und verwirft den Rest, statt in eine Abwärtsspirale zu geraten. Die Statuszeile zeigt dann „Tempo … %“.
 - **Overlay** (Pinsel, Linien-/Rechteck-Vorschau) wird in den Pixelpuffer gerastert, nicht per Canvas-Pfad gezeichnet. `putImageData` gemischt mit Vektorzeichnen bremst Safari stark aus.

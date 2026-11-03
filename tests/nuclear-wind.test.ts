@@ -158,6 +158,35 @@ describe('wind', () => {
     expect(strong).toBeGreaterThan(normal + 3);
   });
 
+  it('a fan sucks gas in at the back and blows it out the front', () => {
+    const sim = makeSim(60, 30, 3);
+    // A fan wall, 3 cells thick and as high as the world: the only way
+    // across is through the fans.
+    for (let y = 0; y < 30; y++) for (let x = 28; x < 31; x++) put(sim, x, y, 'fan right');
+    for (let y = 2; y < 28; y++) for (let x = 2; x < 20; x++) if ((x + y) % 3 === 0) put(sim, x, y, 'smoke');
+    const behind = () => {
+      let n = 0;
+      for (let i = 0; i < sim.size; i++) if (sim.type[i] === ID.smoke && i % 60 < 28) n++;
+      return n;
+    };
+    const start = behind();
+    run(sim, 120);
+    expect(behind()).toBeLessThan(start * 0.5);
+    let front = 0;
+    for (let i = 0; i < sim.size; i++) if (sim.type[i] === ID.smoke && i % 60 > 30) front++;
+    expect(front).toBeGreaterThan(start * 0.3);
+  });
+
+  it('sand and water do not pass through a fan', () => {
+    const sim = makeSim(30, 20, 3);
+    for (let y = 0; y < 20; y++) put(sim, 15, y, 'fan right');
+    for (let y = 10; y < 20; y++) for (let x = 5; x < 15; x++) put(sim, x, y, y < 15 ? 'sand' : 'water');
+    run(sim, 200);
+    let across = 0;
+    for (let i = 0; i < sim.size; i++) if ((sim.type[i] === ID.sand || sim.type[i] === ID.water) && i % 30 > 15) across++;
+    expect(across).toBe(0);
+  });
+
   it('a fan painted without a strength uses the default (5)', () => {
     expect(P.defaultParam[ID['fan right']]).toBe(5);
   });
