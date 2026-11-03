@@ -6,6 +6,11 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.5.2] – 2026-11-03
+
+### Behoben
+- **Home-Bildschirm-App am iPhone (#7):** Die Statusleiste ist jetzt undurchsichtig (`black` statt `black-translucent`), die App beginnt unter ihr. Bisher lief die App unter die Statusleiste. iOS 26 machte dadurch die erste Werkzeugzeile unscharf und gab der App eine zu kleine Höhe, unten blieb ein leerer Streifen. Wirkt erst, nachdem die App neu zum Home-Bildschirm hinzugefügt wurde.
+
 ## [0.5.1] – 2026-11-03
 
 ### Behoben
@@ -83,7 +88,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.1...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.1...v0.4.2
