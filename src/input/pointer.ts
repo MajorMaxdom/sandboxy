@@ -37,6 +37,11 @@ export class PointerInput {
       if (!this.down) this.hover = null;
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    // iOS still starts its long-press magnifier / selection from raw touch
+    // events. Painting runs on pointer events, which this does not affect.
+    const noTouchDefault = (e: TouchEvent) => e.preventDefault();
+    canvas.addEventListener('touchstart', noTouchDefault, { passive: false });
+    canvas.addEventListener('touchmove', noTouchDefault, { passive: false });
   }
 
   private toGrid(e: { clientX: number; clientY: number }): GridPoint {

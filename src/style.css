@@ -22,6 +22,17 @@ body {
   color: var(--text);
   font: 14px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
   overscroll-behavior: none;
+  /* No text selection, magnifier loupe or callout menu on long press (iOS):
+     painting means holding a finger down for a long time. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input[type='text'] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 #app {

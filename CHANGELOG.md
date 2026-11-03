@@ -6,6 +6,14 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.4.0] – 2026-11-03
+
+### Neu
+- **Zum Home-Bildschirm hinzufügen:** App-Icon, Name und Vollbild ohne Browserleisten (Web-App-Manifest und Apple-Meta-Tags).
+
+### Behoben
+- Langes Drücken beim Malen öffnete auf dem iPhone die Lupe bzw. die Textauswahl.
+
 ## [0.3.1] – 2026-11-03
 
 ### Behoben
@@ -48,7 +56,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.1...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.1.0...v0.2.0

@@ -41,6 +41,8 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - **Fallen mitziehen:** Fällt ein Teilchen frei, bekommt das gleichartige Teilchen direkt darüber sein Tempo (`dragAlong` in `movement.ts`). Sonst reißen gemalte Ströme in Balken auf, weil jede neue Zeile aus dem Stand startet.
 - **Frame-Budget:** `main.ts` simuliert pro Frame höchstens `SIM_BUDGET_MS` lang und verwirft den Rest, statt in eine Abwärtsspirale zu geraten. Die Statuszeile zeigt dann „Tempo … %“.
 - **Overlay** (Pinsel, Linien-/Rechteck-Vorschau) wird in den Pixelpuffer gerastert, nicht per Canvas-Pfad gezeichnet. `putImageData` gemischt mit Vektorzeichnen bremst Safari stark aus.
+- **Touch auf iOS:** `user-select: none` und `-webkit-touch-callout: none` auf `body` (Textfelder ausgenommen), dazu `preventDefault` auf `touchstart`/`touchmove` am Canvas. Sonst öffnet langes Malen die Lupe. Gemalt wird über Pointer Events, die davon nicht betroffen sind.
+- **Home-Bildschirm:** `public/manifest.webmanifest` und die Icons in `public/` (aus dem Pixel-Logo gerendert). Ein Service Worker für Offline-Betrieb fehlt bewusst, weil er HTTPS braucht und das Homelab per HTTP läuft.
 - **Demos** bauen in Bruchteil-Koordinaten. Vorsicht vor Rundungslücken von einer Pixelzeile zwischen Bauteilen, die sich berühren müssen. Dafür gibt es Tests in `tests/features.test.ts` („demo behaviour“).
 - **Balancing-Werte** (kritische Masse, Brenngeschwindigkeiten, Gebläsedruck) wurden per Experiment/Test eingestellt. Nach Änderungen `npm test` laufen lassen.
 - **Neues Element:** Objekt in passender `src/elements/*.ts` ergänzen. Verweise per Key-String, die Registry wirft bei Tippfehlern. Neue Kategorie: `Category` in `types.ts` + `CATEGORIES` in `registry.ts`.
