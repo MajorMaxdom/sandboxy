@@ -6,6 +6,14 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.8.0] – 2026-11-03
+
+### Neu
+- **Wind-Werkzeug:** Im Tab „Werkzeuge“ wischt man über die Fläche und bläst Gase, Staub und Leichtes in Wischrichtung. Je schneller der Wisch, desto stärker der Stoß, und er klingt über einige Ticks aus. Wände und Metall bleiben stehen.
+
+### Geändert
+- Der Tab „Werkzeuge“ (Radierer, Heizen, Kühlen, Wind, Schalter) steht jetzt vorne. Am Handy war er als letzter Tab leicht zu übersehen.
+
 ## [0.7.0] – 2026-11-03
 
 ### Neu
@@ -106,7 +114,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.7.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.1...v0.5.2

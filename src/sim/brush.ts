@@ -8,6 +8,8 @@ export type Tool =
   | { kind: 'erase' }
   | { kind: 'heat' }
   | { kind: 'cool' }
+  /** Wind gust in the direction the brush is dragged (see blowCircle). */
+  | { kind: 'wind' }
   | { kind: 'toggle' };
 
 export interface BrushOptions {
@@ -138,4 +140,34 @@ export function floodFill(sim: Simulation, x: number, y: number, tool: Tool, opt
     if (cy < h - 1 && !seen[i + w] && type[i + w] === target) { seen[i + w] = 1; queue[tail++] = i + w; }
   }
   return tail;
+}
+
+/** Strongest gust the wind tool makes (cells per tick of wind). */
+const GUST_MAX = 8;
+/** Wind per cell of brush movement per frame. */
+const GUST_PER_CELL = 1.5;
+
+/**
+ * Wind tool: blow (wx, wy) = how far the brush moved since the last frame,
+ * over a circle a bit wider than the brush. Particles read it next tick.
+ */
+export function blowCircle(sim: Simulation, cx: number, cy: number, wx: number, wy: number, radius: number): void {
+  const len = Math.hypot(wx, wy);
+  if (len === 0) return;
+  const g = Math.min(GUST_MAX, len * GUST_PER_CELL) / len;
+  const gx = wx * g;
+  const gy = wy * g;
+  const r = Math.round(radius) * 2 + 3;
+  const { w, windX, windY } = sim;
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const d2 = dx * dx + dy * dy;
+      if (d2 > r * r || !sim.inBounds(cx + dx, cy + dy)) continue;
+      const j = (cy + dy) * w + cx + dx;
+      const f = 1 - Math.sqrt(d2) / (r + 1);
+      windX[j] += gx * f;
+      windY[j] += gy * f;
+      if (sim.type[j] !== 0) sim.wake(j);
+    }
+  }
 }

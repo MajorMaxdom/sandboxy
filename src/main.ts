@@ -1,7 +1,7 @@
 import './style.css';
 import { ELEMENTS, ID } from './elements/registry';
 import { Simulation } from './sim/simulation';
-import { floodFill, paintCircle, paintLine, paintRect, type Tool } from './sim/brush';
+import { blowCircle, floodFill, paintCircle, paintLine, paintRect, type Tool } from './sim/brush';
 import { Renderer, type Overlay, type ViewMode } from './render/renderer';
 import { PointerInput } from './input/pointer';
 import { createToolbar } from './ui/toolbar';
@@ -388,7 +388,7 @@ function handleInput(): void {
 
   if (!stroke) {
     const t = input.erase ? ERASE : tool;
-    const sh: Shape = input.pickClick ? 'pick' : shape;
+    const sh: Shape = input.pickClick ? 'pick' : t.kind === 'wind' ? 'free' : shape;
     stroke = { start: pts[0], end: pts[0], tool: t, shape: sh };
     if (sh === 'pick') {
       pick(pts[0]);
@@ -405,12 +405,43 @@ function handleInput(): void {
       return;
     }
   }
+  const prevEnd = stroke.end;
   stroke.end = pts[pts.length - 1];
   if (stroke.shape !== 'free' || stroke.tool.kind === 'toggle') return;
   const t = stroke.tool;
+  if (t.kind === 'wind') {
+    // Gusts along the drag, from where the brush was last frame. They keep
+    // blowing for a few ticks, fading out (see blowGusts).
+    let a = prevEnd;
+    for (const b of pts) {
+      if (b.x !== a.x || b.y !== a.y) gusts.push({ x: b.x, y: b.y, dx: b.x - a.x, dy: b.y - a.y, r: brush, ttl: GUST_TICKS });
+      a = b;
+    }
+    if (!input.down) finishStroke();
+    return;
+  }
   if (pts.length === 1) paintLine(sim, pts[0].x, pts[0].y, pts[0].x, pts[0].y, t, opt);
   for (let k = 1; k < pts.length; k++) paintLine(sim, pts[k - 1].x, pts[k - 1].y, pts[k].x, pts[k].y, t, opt);
   if (!input.down) finishStroke();
+}
+
+/** Wind tool gusts still blowing, and for how many more ticks. */
+const GUST_TICKS = 12;
+const GUST_FADE = 0.85;
+const GUST_LIMIT = 400;
+let gusts: { x: number; y: number; dx: number; dy: number; r: number; ttl: number }[] = [];
+
+/** Before a tick: let the wind tool's gusts blow (fading). */
+function blowGusts(): void {
+  if (gusts.length === 0) return;
+  if (gusts.length > GUST_LIMIT) gusts = gusts.slice(-GUST_LIMIT);
+  for (const g of gusts) {
+    blowCircle(sim, g.x, g.y, g.dx, g.dy, g.r);
+    g.dx *= GUST_FADE;
+    g.dy *= GUST_FADE;
+    g.ttl--;
+  }
+  gusts = gusts.filter((g) => g.ttl > 0);
 }
 
 function finishStroke(): void {
@@ -470,6 +501,7 @@ function frame(now: number): void {
     // simulation run slower than real time and keep the screen smooth.
     const t0 = performance.now();
     while (acc >= 1) {
+      blowGusts();
       sim.step();
       acc -= 1;
       ticks++;
@@ -481,6 +513,7 @@ function frame(now: number): void {
   } else {
     acc = 0;
     while (stepRequests > 0) {
+      blowGusts();
       sim.step();
       stepRequests--;
     }

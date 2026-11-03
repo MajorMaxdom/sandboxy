@@ -12,8 +12,9 @@ interface PaletteItem {
 
 const TOOLS: PaletteItem[] = [
   { label: 'Radierer', color: '#2a2a33', description: 'Entfernt Partikel (auch: rechte Maustaste).', tool: { kind: 'erase' } },
-  { label: 'Heizen', color: '#b8442f', description: 'Erhitzt alles unter dem Pinsel.', tool: { kind: 'heat' } },
-  { label: 'Kühlen', color: '#2f73b8', description: 'Kühlt alles unter dem Pinsel ab.', tool: { kind: 'cool' } },
+  { label: 'Heizen', color: '#b8442f', description: 'Erhitzt, was unter dem Pinsel liegt, solange man drückt.', tool: { kind: 'heat' } },
+  { label: 'Kühlen', color: '#2f73b8', description: 'Kühlt ab, was unter dem Pinsel liegt, solange man drückt.', tool: { kind: 'cool' } },
+  { label: 'Wind', color: '#6fa8bf', description: 'Über die Fläche wischen: bläst Gase, Staub und Leichtes in Wischrichtung.', tool: { kind: 'wind' } },
   { label: 'Schalter umlegen', color: '#3fbf5a', description: 'Klick auf einen Schalter schaltet ihn an oder aus.', tool: { kind: 'toggle' } },
 ];
 
@@ -104,7 +105,8 @@ export function createToolbar(
   initial: Tool,
   onSelect: (tool: Tool, label: string) => void,
 ): { select: (tool: Tool) => Tool } {
-  const cats = [...CATEGORIES.map((c) => ({ key: c.key as string, label: c.label })), { key: 'tools', label: 'Werkzeuge' }];
+  // Tools first: on a phone the tab row scrolls, and the last tab is easy to miss.
+  const cats = [{ key: 'tools', label: 'Werkzeuge' }, ...CATEGORIES.map((c) => ({ key: c.key as string, label: c.label }))];
   let current: Tool = initial;
   let activeCat = 'land';
   try {
