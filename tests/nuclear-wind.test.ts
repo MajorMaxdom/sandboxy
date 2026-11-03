@@ -177,6 +177,17 @@ describe('wind', () => {
     expect(front).toBeGreaterThan(start * 0.3);
   });
 
+  it('gas also passes through a long fan bar', () => {
+    const sim = makeSim(200, 30, 3);
+    // A 160 cell long "fan right" bar, as painted with a line; steam behind its left end.
+    for (let y = 14; y < 18; y++) for (let x = 20; x < 180; x++) put(sim, x, y, 'fan right');
+    for (let y = 13; y < 19; y++) for (let x = 8; x < 18; x++) if ((x + y) % 2) put(sim, x, y, 'smoke');
+    run(sim, 60);
+    let front = 0;
+    for (let i = 0; i < sim.size; i++) if (sim.type[i] === ID.smoke && i % 200 >= 180) front++;
+    expect(front).toBeGreaterThan(5);
+  });
+
   it('sand and water do not pass through a fan', () => {
     const sim = makeSim(30, 20, 3);
     for (let y = 0; y < 20; y++) put(sim, 15, y, 'fan right');

@@ -6,6 +6,11 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.8.1] – 2026-11-03
+
+### Behoben
+- Gas sammelte sich weiter hinter langen Gebläsen (z. B. als Linie gemalt): Durchgereicht wurde nur durch höchstens 32 Gebläse-Zellen. Jetzt geht es durch die ganze zusammenhängende Gebläse-Reihe.
+
 ## [0.8.0] – 2026-11-03
 
 ### Neu
@@ -114,7 +119,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.2...v0.6.0

@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 149 Tests, alle grün
+npm test             # Vitest, aktuell 150 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.

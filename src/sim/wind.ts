@@ -67,9 +67,7 @@ export function blow(sim: Simulation, i: number, x: number, y: number, id: numbe
   return cur !== i || floating;
 }
 
-/** Most fan cells a particle is passed through in one go … */
-const FAN_PASS_MAX = 32;
-/** … and how light it must be (windFactor) to get through at all. */
+/** How light a particle must be (windFactor) to get through a fan. */
 const FAN_PASS_MIN_WIND = 0.2;
 
 /** Blow direction of a fan element, or null. */
@@ -95,7 +93,8 @@ function windTarget(sim: Simulation, id: number, x: number, y: number, dx = 0, d
   if (P.windFactor[id] < FAN_PASS_MIN_WIND) return -1;
   const d = fanDir(t);
   if (!d || d[0] !== dx || d[1] !== dy || (dx === 0 && dy === 0)) return -1;
-  for (let k = 1; k <= FAN_PASS_MAX; k++) {
+  // Through the whole fan, however long, to the first cell past it.
+  for (let k = 1; ; k++) {
     const nx = x + dx * k;
     const ny = y + dy * k;
     if (!sim.inBounds(nx, ny)) return -1;
