@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ID } from '../src/elements/registry';
 import { blowCircle, paintCircle } from '../src/sim/brush';
-import { makeSim, put } from './helpers';
+import { makeSim, put, run } from './helpers';
 
 describe('tools', () => {
   it('the wind tool blows smoke the way the brush is dragged', () => {
@@ -19,6 +19,37 @@ describe('tools', () => {
       sim.step();
     }
     expect(meanX()).toBeGreaterThan(before + 8);
+  });
+
+  it('the wind tool shoves water in the drag direction', () => {
+    const sim = makeSim(40, 20, 5);
+    for (let x = 0; x < 40; x++) put(sim, x, 19, 'wall');
+    const i = put(sim, 15, 18, 'water');
+    blowCircle(sim, 15, 18, 4, 0, 2);
+    expect(sim.vx[i]).toBeGreaterThan(0);
+    expect(sim.vy[i]).toBeLessThan(0); // a little lift
+  });
+
+  it('the wind tool sweeps a sand pile along', () => {
+    for (const key of ['sand']) {
+      const sim = makeSim(80, 20, 5);
+      for (let x = 0; x < 80; x++) put(sim, x, 19, 'wall');
+      for (let y = 15; y < 19; y++) for (let x = 10; x < 20; x++) put(sim, x, y, key);
+      run(sim, 30); // settle
+      const meanX = () => {
+        let s = 0;
+        let n = 0;
+        for (let i = 0; i < sim.size; i++) if (sim.type[i] === ID[key]) { s += i % 80; n++; }
+        return s / n;
+      };
+      const before = meanX();
+      for (let t = 0; t < 30; t++) {
+        blowCircle(sim, 15, 16, 4, 0, 4);
+        sim.step();
+      }
+      run(sim, 60);
+      expect(meanX(), key).toBeGreaterThan(before + 3);
+    }
   });
 
   it('the wind tool does not move walls or metal', () => {

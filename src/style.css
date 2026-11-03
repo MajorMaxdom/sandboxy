@@ -536,6 +536,21 @@ button.danger {
     width: 110px;
   }
 
+  /* The element under the finger wins over the stats when space runs out. */
+  #hover {
+    flex-shrink: 0;
+    max-width: 65%;
+  }
+
+  #stats {
+    flex-shrink: 1;
+  }
+
+  #grid-info {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
   #hud {
     flex: 1 0 100%;
     justify-content: space-between;

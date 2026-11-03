@@ -6,6 +6,16 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.9.0] – 2026-11-03
+
+### Geändert
+- **Wind-Werkzeug** schubst jetzt auch Sand, Wasser und andere lose Pulver und Flüssigkeiten in Wischrichtung, mit etwas Auftrieb. Bisher bewegte es praktisch nur Gase. Feststoffe und Wände bleiben stehen.
+- Die Anzeige unter dem Finger zeigt die Temperatur zuerst („1776 °C · Flüssiges Glas“).
+- Am Handy ist die Statuszeile kürzer („60 FPS · 3.500 · v0.9.0“), die Rastergröße steht im ☰-Menü unter „Ansicht“.
+
+### Behoben
+- Am iPhone wurde die Temperatur unter dem Finger abgeschnitten, weil die Statuszeile zu lang war.
+
 ## [0.8.1] – 2026-11-03
 
 ### Behoben
@@ -119,7 +129,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.1...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.6.0...v0.7.0

@@ -1,5 +1,5 @@
 import { P, ID } from '../elements/registry';
-import { CHARGE_MAX } from '../elements/props';
+import { CHARGE_MAX, POWDER, LIQUID } from '../elements/props';
 import type { Simulation } from './simulation';
 
 export type Tool =
@@ -146,6 +146,15 @@ export function floodFill(sim: Simulation, x: number, y: number, tool: Tool, opt
 const GUST_MAX = 8;
 /** Wind per cell of brush movement per frame. */
 const GUST_PER_CELL = 1.5;
+/** Share of the gust that becomes velocity of sand, water and the like … */
+const GUST_SHOVE = 0.15;
+/** … plus a little lift, so piles get swept up instead of only pressed together. */
+const GUST_LIFT = 0.25;
+const GUST_MAX_SPEED = 4;
+
+function clampSpeed(v: number): number {
+  return v > GUST_MAX_SPEED ? GUST_MAX_SPEED : v < -GUST_MAX_SPEED ? -GUST_MAX_SPEED : v;
+}
 
 /**
  * Wind tool: blow (wx, wy) = how far the brush moved since the last frame,
@@ -167,7 +176,17 @@ export function blowCircle(sim: Simulation, cx: number, cy: number, wx: number, 
       const f = 1 - Math.sqrt(d2) / (r + 1);
       windX[j] += gx * f;
       windY[j] += gy * f;
-      if (sim.type[j] !== 0) sim.wake(j);
+      const t = sim.type[j];
+      if (t === 0) continue;
+      sim.wake(j);
+      // Wind alone hardly moves sand or water: give loose powders and
+      // liquids a shove (they fly ballistically, see movement.ts).
+      const st = P.state[t];
+      if (st === POWDER || st === LIQUID) {
+        const k = GUST_SHOVE * f;
+        sim.vx[j] = clampSpeed(sim.vx[j] + gx * k);
+        sim.vy[j] = clampSpeed(sim.vy[j] + gy * k - (gy <= 0 ? GUST_LIFT * f : 0));
+      }
     }
   }
 }

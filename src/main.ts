@@ -229,6 +229,7 @@ btnRedo.addEventListener('click', redo);
 
 // ☰ menu on phones: the less used settings fold into a panel over the canvas.
 const btnMenu = $<HTMLButtonElement>('btn-menu');
+const gridInfo = $<HTMLSpanElement>('grid-info');
 const menuPanel = $<HTMLDivElement>('menu-panel');
 function setMenu(open: boolean): void {
   menuPanel.classList.toggle('open', open);
@@ -481,7 +482,8 @@ function updateHud(): void {
     const i = hv.y * sim.w + hv.x;
     const def = ELEMENTS[sim.type[i]];
     const extra = renderer.mode === 'pressure' ? ` · Druck ${sim.presAt(hv.x, hv.y).toFixed(2)}` : '';
-    hoverEl.textContent = `${def.label} · ${Math.round(sim.temp[i])} °C${extra}`;
+    // Temperature first: on a phone the line gets cut off at the end.
+    hoverEl.textContent = `${Math.round(sim.temp[i])} °C · ${def.label}${extra}`;
   } else {
     hoverEl.textContent = '';
   }
@@ -527,12 +529,19 @@ function frame(now: number): void {
     fps = Math.round((frames * 1000) / (now - fpsTime));
     // Show how fast the world runs when the device can't keep up.
     const rate = ticks / ((now - fpsTime) / 1000) / (TICK_RATE * speed);
-    const slow = !paused && rate < 0.9 ? ` · Tempo ${Math.round(rate * 100)} %` : '';
+    // Phones get a short line, so the element under the finger fits next to it.
+    const compact = window.innerWidth <= 720;
+    const slow = !paused && rate < 0.9 ? (compact ? ` · ${Math.round(rate * 100)} %` : ` · Tempo ${Math.round(rate * 100)} %`) : '';
     frames = 0;
     ticks = 0;
     fpsTime = now;
     const zoom = view.zoom > 1 ? ` · Zoom ${view.zoom.toFixed(1).replace('.', ',')}×` : '';
-    statsEl.textContent = `${fps} FPS${slow} · ${sim.countParticles().toLocaleString('de-DE')} Partikel · ${sim.w}×${sim.h}${zoom} · v${APP_VERSION}`;
+    const count = sim.countParticles().toLocaleString('de-DE');
+    statsEl.textContent = compact
+      ? `${fps} FPS${slow} · ${count}${zoom} · v${APP_VERSION}`
+      : `${fps} FPS${slow} · ${count} Partikel · ${sim.w}×${sim.h}${zoom} · v${APP_VERSION}`;
+    gridInfo.textContent = `Raster ${sim.w}×${sim.h}`;
+    statsEl.title = `${fps} FPS${slow} · ${count} Partikel · Raster ${sim.w}×${sim.h}${zoom} · Version ${APP_VERSION}`;
   }
 
   requestAnimationFrame(frame);
