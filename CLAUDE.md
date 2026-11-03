@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 142 Tests, alle grün
+npm test             # Vitest, aktuell 144 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.
@@ -27,8 +27,8 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 
 ## Konventionen und Stolperfallen
 - **Doppelt belegte Felder:** `life` ist Lebensdauer, Wachstumsbudget, Schalterzustand, Klon-ID, Kritikalität, Laserfarbe (RGB565), Feuerwerk-Füllung (Element-ID; bei der Rakete ab Bit 6, darunter Flugzeit) usw. Element-IDs in `life` müssen in `deserialize` umgemappt werden.
-- **Elementoptionen:** `ElementDef.option` ('color' | 'element') zeigt in der Werkzeugleiste ein Steuerelement (`optionLabel`, `optionDefault`, `optionNone`, gemeinsamer Wert über `optionKey`). Der Wert reist als `Tool.param` mit und landet beim Malen in `life`. Ist `life` 0, gilt `P.defaultParam`. Element-IDs in `life` (`P.lifeIsElement`) werden beim Laden umgemappt.
-- **Laserlicht** ist keine Materie: Laser schreiben jeden Tick über `traceBeam()` (tech.ts) in `sim.beam`. Was der Strahl an einer Zelle tut, steht in `ElementDef.light` ('pass', 'mirror/', 'mirror\\', 'filter'); sonst wird er absorbiert und heizt, oder `onLight` wird aufgerufen (Solarzelle, Lichtsensor). Der Strom-Haltezähler von Laser und Wasserhahn liegt in `shade`-Bits 2–7 (`poweredOrUnwired`).
+- **Elementoptionen:** `ElementDef.option` ('color' | 'element' | 'level', Letzteres eine Stärke 1–10 wie beim Gebläse) zeigt in der Werkzeugleiste ein Steuerelement (`optionLabel`, `optionDefault`, `optionNone`, gemeinsamer Wert über `optionKey`). Der Wert reist als `Tool.param` mit und landet beim Malen in `life`. Ist `life` 0, gilt `P.defaultParam`. Element-IDs in `life` (`P.lifeIsElement`) werden beim Laden umgemappt.
+- **Laserlicht** ist keine Materie: Laser schreiben jeden Tick über `traceBeam()` (tech.ts) in `sim.beam`. Was der Strahl an einer Zelle tut, steht in `ElementDef.light` ('pass', 'mirror/', 'mirror\\', 'filter'); sonst wird er absorbiert und heizt, oder `onLight` wird aufgerufen (Solarzelle, Lichtsensor). Der Strom-Haltezähler von Laser, Wasserhahn und Gebläse liegt in `shade`-Bits 2–7 (`poweredOrUnwired`), weil `life` die Option trägt.
 - **Portale:** Ausgänge tragen sich jeden Tick in `sim.portalExitsNext` ein, Eingänge lesen im nächsten Tick `sim.portalExits`. Der Kanal ist die Farbe in `life`.
 - **Wachsendes mit `calm: true`** (Gras, Moos, Algen, Konverter) hält seinen Chunk nur per `sim.wake(i)` wach, solange es noch Arbeit hat, damit fertige Wiesen schlafen.
 - **Brennen:** `burn()` prüft Nachbarn auf CO₂ (erstickt) und Sauerstoff (schneller und heißer, wird langsam verbraucht).

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ID } from '../src/elements/registry';
+import { ID, P } from '../src/elements/registry';
 import { at, count, makeSim, meanY, put, run } from './helpers';
 
 /** Count Geiger counter flashes over `ticks`. */
@@ -138,6 +138,28 @@ describe('wind', () => {
     const before = meanY(sim, 'ash');
     run(sim, 60);
     expect(meanY(sim, 'ash')).toBeLessThan(before - 3);
+  });
+
+  it('fan strength: a stronger fan blows further and harder', () => {
+    const meanX = (level: number) => {
+      const sim = makeSim(80, 30, 7);
+      for (let y = 10; y < 30; y++) for (let x = 0; x < 3; x++) sim.life[put(sim, x, y, 'fan right')] = level;
+      for (let y = 12; y < 28; y++) for (let x = 6; x < 30; x++) if ((x + y) % 2) put(sim, x, y, 'smoke');
+      run(sim, 60);
+      let sum = 0;
+      let n = 0;
+      for (let i = 0; i < sim.size; i++) if (sim.type[i] === ID.smoke) { sum += i % 80; n++; }
+      return sum / n;
+    };
+    const weak = meanX(1);
+    const normal = meanX(5);
+    const strong = meanX(10);
+    expect(normal).toBeGreaterThan(weak + 5);
+    expect(strong).toBeGreaterThan(normal + 3);
+  });
+
+  it('a fan painted without a strength uses the default (5)', () => {
+    expect(P.defaultParam[ID['fan right']]).toBe(5);
   });
 
   it('a wind turbine generates current only when there is wind', () => {

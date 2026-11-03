@@ -229,6 +229,7 @@ function build(): void {
     P.onLight[i] = d.onLight;
     if (d.option === 'color') P.defaultParam[i] = hexToRgb565(d.optionDefault ?? '#ff2020');
     else if (d.option === 'element' && d.optionDefault !== undefined) P.defaultParam[i] = ref(d.optionDefault, ctx);
+    else if (d.option === 'level') P.defaultParam[i] = Number(d.optionDefault ?? 5);
     P.logic[i] = d.logic ? 1 : 0;
     P.emit[i] = d.radioactive?.emit ?? 0;
     P.decayHeat[i] = d.radioactive?.heat ?? 0;

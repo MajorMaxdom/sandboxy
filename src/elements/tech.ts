@@ -30,22 +30,18 @@ function fan(key: string, label: string, arrow: string, dx: number, dy: number):
     state: 'static',
     density: 3000,
     conductivity: 0.3,
+    option: 'level',
+    optionKey: 'fan',
+    optionLabel: 'Stärke',
+    optionDefault: '5',
     update(sim, i, x, y) {
       // Wired to a conductor? Then it only runs while current arrives.
-      let wired = false;
-      for (const j of sim.neighbors4(x, y)) {
-        if (!P.conducts[sim.type[j]]) continue;
-        wired = true;
-        if (sim.charge[j] > 0) sim.life[i] = 15;
-      }
-      if (wired) {
-        if (sim.life[i] === 0) return false;
-        sim.life[i]--;
-      }
-      sim.shade[i] = (sim.shade[i] + 1) & 3; // spinning blades
+      if (!poweredOrUnwired(sim, i, x, y)) return false;
+      const s = sim.shade[i];
+      sim.shade[i] = (s & ~3) | ((s + 1) & 3); // spinning blades
       return update(sim, i, x, y);
     },
-    description: `Bläst Wind ${label} und erzeugt Luftströmung, die Röhren folgt. Mit Kabel verbunden läuft es nur unter Strom.`,
+    description: `Bläst Wind ${label} und erzeugt Luftströmung, die Röhren folgt. Stärke 1–10 unter der Palette. Mit Kabel verbunden läuft es nur unter Strom.`,
   };
 }
 

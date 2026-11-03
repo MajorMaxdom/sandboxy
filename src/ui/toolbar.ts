@@ -79,6 +79,7 @@ const optKey = (d: ElementDef) => d.optionKey ?? d.key;
 function optValue(d: ElementDef): string {
   const v = opts[optKey(d)];
   if (d.option === 'color') return v && /^#[0-9a-f]{6}$/i.test(v) ? v : (d.optionDefault ?? '#ff2020');
+  if (d.option === 'level') return v && /^([1-9]|10)$/.test(v) ? v : (d.optionDefault ?? '5');
   if (v !== undefined && (v === '' ? d.optionNone !== undefined : ID[v] !== undefined)) return v;
   return d.optionDefault ?? '';
 }
@@ -88,7 +89,7 @@ function withParam(tool: Tool): Tool {
   const d = optionDef(tool);
   if (tool.kind !== 'element' || !d) return tool;
   const v = optValue(d);
-  const param = d.option === 'color' ? hexToRgb565(v) : (ID[v] ?? 0);
+  const param = d.option === 'color' ? hexToRgb565(v) : d.option === 'level' ? Number(v) : (ID[v] ?? 0);
   return { ...tool, param };
 }
 
@@ -194,6 +195,22 @@ export function createToolbar(
         apply();
       });
       label.append(`${d.optionLabel ?? 'Farbe'} `, input);
+    } else if (d.option === 'level') {
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = '1';
+      input.max = '10';
+      input.value = optValue(d);
+      const out = document.createElement('span');
+      out.className = 'opt-val';
+      out.textContent = input.value;
+      input.title = 'Übermalen mit einer anderen Stärke stellt vorhandene um.';
+      input.addEventListener('input', () => {
+        opts[key] = input.value;
+        out.textContent = input.value;
+        apply();
+      });
+      label.append(`${d.optionLabel ?? 'Stärke'} `, input, out);
     } else {
       const sel = document.createElement('select');
       if (d.optionNone !== undefined) {
@@ -250,6 +267,7 @@ export function createToolbar(
       if (d && tool.kind === 'element' && tool.param !== undefined) {
         const key = optKey(d);
         if (d.option === 'color') opts[key] = rgb565ToHex(tool.param || DEFAULT_LASER);
+        else if (d.option === 'level') opts[key] = String(Math.min(10, Math.max(1, tool.param || Number(d.optionDefault ?? 5))));
         else opts[key] = tool.param ? (ELEMENTS[tool.param]?.key ?? '') : '';
         saveOpts();
       }

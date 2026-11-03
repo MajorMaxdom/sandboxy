@@ -121,16 +121,17 @@ export interface ElementDef {
   /**
    * Extra setting chosen in the toolbar and stored in `life` when painted:
    * 'color' = RGB565 color (lasers, filters, portal channels),
-   * 'element' = element id (firework filling, converter, faucet).
+   * 'element' = element id (firework filling, converter, faucet),
+   * 'level' = a strength 1–10 (fans).
    */
-  option?: 'color' | 'element';
+  option?: 'color' | 'element' | 'level';
   /** 'color' options: draw the cell in a darker version of its color (portal exits). */
   dimOwnColor?: boolean;
   /** Elements sharing this key share the chosen value (all lasers, both portal ends). */
   optionKey?: string;
   /** Toolbar label of the option (default "Farbe" / "Element"). */
   optionLabel?: string;
-  /** Initial value: a hex color or an element key. */
+  /** Initial value: a hex color, an element key or a level ("5"). */
   optionDefault?: string;
   /** 'element' options: label for "no element" (life 0); without it, one must be chosen. */
   optionNone?: string;

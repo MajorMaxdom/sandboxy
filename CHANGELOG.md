@@ -6,6 +6,16 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.6.0] – 2026-11-03
+
+### Neu
+- **Gebläse-Stärke (#8):** Unter der Palette lässt sich die Stärke 1–10 einstellen (Standard 5 = wie bisher). Mit der Stärke wachsen Reichweite (20–65 Zellen), Windkraft und Luftdruck. Übermalen stellt vorhandene Gebläse um, die Pipette übernimmt die Stärke.
+
+### Geändert
+- Starker Wind trägt leichte Teilchen bis zu 3 Zellen pro Tick statt einer.
+- Gas, das gegen eine Wand geblasen wird, weicht seitlich aus. Aufsteigende Gase klettern bevorzugt an der Wand nach oben, statt sich in der Ecke zu stauen.
+- Am iPhone reicht die Palettenleiste in ihrer Farbe bis unter den Home-Balken.
+
 ## [0.5.2] – 2026-11-03
 
 ### Behoben
@@ -88,7 +98,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.2...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.2...v0.5.0
