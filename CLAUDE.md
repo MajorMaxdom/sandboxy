@@ -32,6 +32,8 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - **Portale:** Ausgänge tragen sich jeden Tick in `sim.portalExitsNext` ein, Eingänge lesen im nächsten Tick `sim.portalExits`. Der Kanal ist die Farbe in `life`.
 - **Wachsendes mit `calm: true`** (Gras, Moos, Algen, Konverter) hält seinen Chunk nur per `sim.wake(i)` wach, solange es noch Arbeit hat, damit fertige Wiesen schlafen.
 - **Brennen:** `burn()` prüft Nachbarn auf CO₂ (erstickt) und Sauerstoff (schneller und heißer, wird langsam verbraucht).
+- **Handy-Menü:** Unter 720 px zeigt die obere Leiste nur `#main-tools`. Der Rest steht in `#menu-panel`, das auf breiten Bildschirmen `display: contents` hat und am Handy als Overlay über der Spielfläche aufklappt (☰, `setMenu()` in `main.ts`). Als Overlay ändert es die Bühnenhöhe nicht.
+- **`#app` ist `position: fixed; inset: 0`** statt `100dvh`, weil iOS als Home-Bildschirm-App eine zu kleine `dvh` meldet.
 - **Höhe der Werkzeugleiste fix halten:** Ändert sie sich (z. B. durch umbrechenden Beschreibungstext), schrumpft die Bühne und das Raster wird neu angelegt. Deshalb hat `#desc-row` eine feste Höhe.
 - **`calm: true`** an einem Element mit `update` verhindert, dass es seinen Chunk dauerhaft wach hält (z. B. Feuerwerk, das nur auf Hitze wartet). `shade` speichert bei Strahlung die **Flugrichtung 0–7**, deshalb rendert der Renderer mit `shade & 3`, und `clear()` setzt `shade` zurück.
 - **Signale von Logik-Bausteinen** setzen `charge = CHARGE_MAX + 1`, damit jeder Leser den Puls genau einmal als `charge === CHARGE_MAX` sieht, unabhängig von der Reihenfolge.

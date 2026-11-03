@@ -6,6 +6,14 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.5.0] – 2026-11-03
+
+### Geändert
+- **Handy-Layout (#5):** Die obere Leiste ist nur noch eine Zeile mit Pause, Einzelschritt, Rückgängig, Wiederholen, Werkzeugform und einem ☰-Menü. Darin liegen nach Bereichen sortiert Tempo, Wind, Pinsel, Übermalen, Ansicht, Pixelgröße, Leeren und Szenen. Das Menü öffnet sich über der Spielfläche, das Raster bleibt dabei gleich. Ein Tipp daneben schließt es, ohne zu malen. Die Spielfläche wird dadurch etwa 120 px höher.
+
+### Behoben
+- Als Home-Bildschirm-App blieb am iPhone unten ein leerer Streifen, weil iOS dort eine zu kleine Bildschirmhöhe meldet.
+
 ## [0.4.2] – 2026-11-03
 
 ### Geändert
@@ -70,7 +78,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.2...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.1...v0.4.0

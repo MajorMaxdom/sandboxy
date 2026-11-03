@@ -21,46 +21,11 @@
     <div id="app">
       <header id="topbar">
         <div class="brand">Sandboxy <span id="app-version" class="version"></span></div>
-        <div class="group">
+        <div class="group" id="main-tools">
           <button id="btn-play" type="button" title="Pause (Leertaste)">⏸</button>
           <button id="btn-step" type="button" title="Einzelschritt (.)">⏭</button>
-          <select id="sel-speed" title="Geschwindigkeit">
-            <option value="0.25">0,25×</option>
-            <option value="0.5">0,5×</option>
-            <option value="1" selected>1×</option>
-            <option value="2">2×</option>
-            <option value="4">4×</option>
-          </select>
-        </div>
-        <div class="group">
-          <label class="brush" title="Pinselgröße ([ und ])">
-            Pinsel <input id="rng-brush" type="range" min="0" max="20" value="3" />
-            <span id="brush-val">3</span>
-          </label>
-          <label class="brush" title="Größe eines Partikels auf dem Bildschirm (+ und −). Kleiner = mehr Platz.">
-            Pixel
-            <select id="sel-pixel">
-              <option value="auto">Auto</option>
-              <option value="1">1 px</option>
-              <option value="2">2 px</option>
-              <option value="3">3 px</option>
-              <option value="4">4 px</option>
-              <option value="5">5 px</option>
-              <option value="6">6 px</option>
-              <option value="8">8 px</option>
-              <option value="10">10 px</option>
-              <option value="12">12 px</option>
-            </select>
-          </label>
-          <label class="brush" title="Globaler Wind (Pfeiltasten ← →)">
-            Wind <input id="rng-wind" type="range" min="-5" max="5" step="1" value="0" />
-            <span id="wind-val">0</span>
-          </label>
-          <label class="check" title="Bestehende Partikel übermalen">
-            <input id="chk-replace" type="checkbox" /> Übermalen
-          </label>
-        </div>
-        <div class="group">
+          <button id="btn-undo" type="button" title="Rückgängig (Strg/⌘+Z)">↶</button>
+          <button id="btn-redo" type="button" title="Wiederholen (Strg/⌘+Umschalt+Z)">↷</button>
           <select id="sel-shape" title="Werkzeugform: Freihand (F), Linie (L), Rechteck (R), Füllen (G), Pipette (I)">
             <option value="free">✎ Freihand</option>
             <option value="line">╱ Linie</option>
@@ -68,15 +33,62 @@
             <option value="fill">▧ Füllen</option>
             <option value="pick">⊙ Pipette</option>
           </select>
-          <button id="btn-undo" type="button" title="Rückgängig (Strg/⌘+Z)">↶</button>
-          <button id="btn-redo" type="button" title="Wiederholen (Strg/⌘+Umschalt+Z)">↷</button>
-          <select id="sel-view" title="Ansicht: Wärmebild (H), Druck (P)">
-            <option value="normal">Normal</option>
-            <option value="heat">Wärmebild</option>
-            <option value="pressure">Druck</option>
-          </select>
-          <button id="btn-clear" type="button">Leeren</button>
-          <button id="btn-saves" type="button">Szenen</button>
+          <button id="btn-menu" type="button" title="Weitere Einstellungen" aria-expanded="false" aria-controls="menu-panel">☰</button>
+        </div>
+        <!-- On wide screens these sit inline in the bar; on phones they fold
+             into a panel that opens over the canvas (so the stage keeps its size). -->
+        <div id="menu-panel">
+          <div class="group" data-title="Simulation">
+            <label class="brush" title="Geschwindigkeit">
+              <span class="menu-only">Tempo</span>
+              <select id="sel-speed" title="Geschwindigkeit">
+                <option value="0.25">0,25×</option>
+                <option value="0.5">0,5×</option>
+                <option value="1" selected>1×</option>
+                <option value="2">2×</option>
+                <option value="4">4×</option>
+              </select>
+            </label>
+            <label class="brush" title="Globaler Wind (Pfeiltasten ← →)">
+              Wind <input id="rng-wind" type="range" min="-5" max="5" step="1" value="0" />
+              <span id="wind-val">0</span>
+            </label>
+          </div>
+          <div class="group" data-title="Pinsel">
+            <label class="brush" title="Pinselgröße ([ und ])">
+              Pinsel <input id="rng-brush" type="range" min="0" max="20" value="3" />
+              <span id="brush-val">3</span>
+            </label>
+            <label class="check" title="Bestehende Partikel übermalen">
+              <input id="chk-replace" type="checkbox" /> Übermalen
+            </label>
+          </div>
+          <div class="group" data-title="Ansicht">
+            <select id="sel-view" title="Ansicht: Wärmebild (H), Druck (P)">
+              <option value="normal">Normal</option>
+              <option value="heat">Wärmebild</option>
+              <option value="pressure">Druck</option>
+            </select>
+            <label class="brush" title="Größe eines Partikels auf dem Bildschirm (+ und −). Kleiner = mehr Platz.">
+              Pixel
+              <select id="sel-pixel">
+                <option value="auto">Auto</option>
+                <option value="1">1 px</option>
+                <option value="2">2 px</option>
+                <option value="3">3 px</option>
+                <option value="4">4 px</option>
+                <option value="5">5 px</option>
+                <option value="6">6 px</option>
+                <option value="8">8 px</option>
+                <option value="10">10 px</option>
+                <option value="12">12 px</option>
+              </select>
+            </label>
+          </div>
+          <div class="group" data-title="Welt">
+            <button id="btn-clear" type="button">Leeren</button>
+            <button id="btn-saves" type="button">Szenen</button>
+          </div>
         </div>
         <div id="hud">
           <span id="hover"></span>

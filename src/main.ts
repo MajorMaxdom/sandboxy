@@ -227,6 +227,33 @@ btnClear.addEventListener('click', () => {
 btnUndo.addEventListener('click', undo);
 btnRedo.addEventListener('click', redo);
 
+// ☰ menu on phones: the less used settings fold into a panel over the canvas.
+const btnMenu = $<HTMLButtonElement>('btn-menu');
+const menuPanel = $<HTMLDivElement>('menu-panel');
+function setMenu(open: boolean): void {
+  menuPanel.classList.toggle('open', open);
+  btnMenu.setAttribute('aria-expanded', String(open));
+}
+btnMenu.addEventListener('click', () => setMenu(!menuPanel.classList.contains('open')));
+// Close on a tap outside the panel. On the canvas that tap only closes the
+// menu and doesn't paint (capture phase, before the canvas sees it) …
+document.addEventListener(
+  'pointerdown',
+  (e) => {
+    const t = e.target as Node;
+    if (!menuPanel.classList.contains('open') || menuPanel.contains(t) || btnMenu.contains(t)) return;
+    setMenu(false);
+    if (t === canvas) e.stopPropagation();
+  },
+  true,
+);
+// … and after the one-shot actions in it.
+btnClear.addEventListener('click', () => setMenu(false));
+btnSaves.addEventListener('click', () => setMenu(false));
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') setMenu(false);
+});
+
 const openSaves = setupSavesDialog(sim, {
   beforeLoad: () => {
     history.record();
