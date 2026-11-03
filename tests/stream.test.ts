@@ -29,3 +29,29 @@ describe('falling streams', () => {
     expect(pour('sand')).toEqual([]);
   });
 });
+
+/** Empty cells with a particle directly above and below: the gaps between bands. */
+function gapsBetweenRows(sim: ReturnType<typeof makeSim>): number {
+  let n = 0;
+  for (let y = 1; y < sim.h - 1; y++) {
+    for (let x = 0; x < sim.w; x++) {
+      const i = y * sim.w + x;
+      if (!sim.type[i] && sim.type[i - sim.w] && sim.type[i + sim.w]) n++;
+    }
+  }
+  return n;
+}
+
+describe('flowing slopes', () => {
+  it('a growing sand pile has no bands of overhanging rows', () => {
+    const sim = makeSim(160, 150);
+    let worst = 0;
+    for (let t = 0; t < 1500; t++) {
+      for (let y = 5; y < 10; y++) for (let x = 78; x < 83; x++) if (!sim.type[y * 160 + x] && (x + y + t) % 2 === 0) put(sim, x, y, 'sand');
+      sim.step();
+      if (t >= 600 && t % 100 === 0) worst = Math.max(worst, gapsBetweenRows(sim));
+    }
+    // With strictly alternating row directions this was around 90–100.
+    expect(worst).toBeLessThan(45);
+  });
+});

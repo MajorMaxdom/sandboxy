@@ -389,10 +389,18 @@ export class Simulation {
     this.windX.fill(0);
     this.windY.fill(0);
 
-    // Bottom-up so falling things don't get processed twice; alternate the
-    // horizontal direction so nothing drifts systematically to one side.
+    // Bottom-up so falling things don't get processed twice. The horizontal
+    // direction is random per row and tick: a row walked against the flow
+    // moves as a whole (each cell steps into the one just vacated), a row
+    // walked with it only at its front. With strictly alternating rows this
+    // showed up as bands of long and short rows on every flowing slope.
+    const seed = Math.imul(this.tick, 0x9e3779b1);
     for (let y = h - 1; y >= 0; y--) {
-      const ltr = ((y + this.tick) & 1) === 0;
+      // murmur3 finaliser of (tick, y): independent of the simulation's rng.
+      let r = seed ^ Math.imul(y, 0x85ebca6b);
+      r = Math.imul(r ^ (r >>> 16), 0x85ebca6b);
+      r = Math.imul(r ^ (r >>> 13), 0xc2b2ae35);
+      const ltr = ((r ^ (r >>> 16)) & 1) === 0;
       const row = y * w;
       const crow = (y >> CHUNK_SHIFT) * cw;
       // Walk the row chunk by chunk, skipping sleeping chunks as a whole.

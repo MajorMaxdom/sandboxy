@@ -6,6 +6,11 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.4.1] – 2026-11-03
+
+### Behoben
+- Streifen an rutschenden Hängen aus Sand, Wasser und anderem (#3, #4): Die Zeilen wurden abwechselnd links- und rechtsherum abgearbeitet. Eine Zeile gegen die Fließrichtung rückt dabei als Ganzes nach, eine in Fließrichtung nur an der Spitze. Deshalb wechselten sich lange und kurze Zeilen ab, und Wasser hing streifenweise über Luft. Die Richtung ist jetzt pro Zeile und Tick zufällig.
+
 ## [0.4.0] – 2026-11-03
 
 ### Neu
@@ -56,7 +61,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.2.0...v0.3.0

@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 138 Tests, alle grün
+npm test             # Vitest, aktuell 139 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.
@@ -17,7 +17,7 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - **Raster als Struct-of-Arrays** in `src/sim/simulation.ts`: `type` (Uint8, Element-ID), `temp`, `life` (Uint16, Mehrzweck-Zähler), `charge` (Strom), `shade` (Farbvariante 0–3), `clock` (schon verarbeitet in diesem Tick), `vx/vy` (Geschwindigkeit).
 - **Elemente sind Daten** (`ElementDef` in `src/sim/types.ts`), eine Datei pro Kategorie in `src/elements/`. `registry.ts` baut daraus flache Typed Arrays `P.*` (in `props.ts`) und eine Reaktionstabelle `P.reactTable[a*n+b]`. Reaktionen werden automatisch gespiegelt.
 - **`ids.ts` / `props.ts`** sind getrennt von `registry.ts`, um zyklische Imports zu vermeiden: Element-Dateien importieren nur `ID` und `P`, nie die Registry.
-- **Tick** (`Simulation.step`): Zellen von unten nach oben (Richtung pro Zeile abwechselnd) → `updateCell` (Lebensdauer → Explosion → Strahlung → Reaktion → Wind → Element-`update` → Brennen → Bewegung) → Temperatur → Strom → Luft.
+- **Tick** (`Simulation.step`): Zellen von unten nach oben (Richtung pro Zeile und Tick per Hash zufällig, nicht abwechselnd, sonst entstehen Streifen an Hängen) → `updateCell` (Lebensdauer → Explosion → Strahlung → Reaktion → Wind → Element-`update` → Brennen → Bewegung) → Temperatur → Strom → Luft.
 - **Schlafende Chunks** (16×16): Nur Blöcke, in denen sich etwas tut, werden verarbeitet. `swap/transform/spawn` wecken automatisch. Wer Arrays direkt beschreibt, muss `sim.wake(i)` bzw. `sim.wakeAll()` aufrufen. „Unruhige“ Elemente (Gase, Lebensdauer, `update`, radioaktiv) halten ihren Block wach. Bei globalem Wind bleibt nur wach, was der Wind in eine freie Nachbarzelle schieben kann. Eine Änderung des Windreglers weckt einmal alles.
 - **Temperatur überspringt Chunks** (`temperature.ts`), wenn der Block schläft, alle Zellen höchstens 0,5 °C von der Umgebung abweichen und kein Phasenübergang und keine Zündung ansteht. Dafür wird jeder Block jeden Tick kurz gescannt, also dürfen `temp`-Werte ohne `wake()` geschrieben werden. Ein Block läuft auch dann, wenn sein rechter oder unterer Nachbar Wärme braucht, weil jede Zelle nur mit rechts und unten austauscht.
 - **Systeme:** `movement.ts` (Pulver/Flüssig/Gas + ballistischer Flug), `temperature.ts` (Diffusion + Phasenübergänge), `reactions.ts` (Reaktionen, Brennen), `electricity.ts` (Impulse, Schalter-Gating), `explosion.ts`, `radiation.ts` (Strahlungsteilchen, Spaltung, Atomexplosion, `signal()`/`pulse()` für Logik), `wind.ts` (globaler Wind, Gebläse-Strahl), `air.ts` (Druck/Strömung auf **2×2-grobem** Raster, `sim.airIndex(x,y)`).
