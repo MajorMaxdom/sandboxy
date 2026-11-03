@@ -1,4 +1,4 @@
-import { P, LIQUID, GAS, AIR_DENSITY } from '../elements/props';
+import { P, POWDER, LIQUID, GAS, AIR_DENSITY } from '../elements/props';
 import type { Simulation } from './simulation';
 
 /** Can a falling powder/liquid `id` move into cell j? */
@@ -88,8 +88,20 @@ function moveBallistic(sim: Simulation, i: number, x: number, y: number, id: num
   } else {
     vx[cur] = fvx;
     vy[cur] = fvy;
+    // Pull the particle sitting on top along (it is processed later this
+    // tick, rows run bottom-up). Otherwise each newly painted row starts from
+    // rest behind an already fast one, and a stream tears into separate bars.
+    if (fvy >= 1 && y > 0) dragAlong(sim, i - w, id, fvy);
   }
   return cur !== i;
+}
+
+function dragAlong(sim: Simulation, j: number, id: number, speed: number): void {
+  const t = sim.type[j];
+  if (t === 0 || sim.clock[j] === sim.parity || sim.vy[j] >= speed) return;
+  const st = P.state[t];
+  if ((st !== POWDER && st !== LIQUID) || P.state[id] !== st) return;
+  sim.vy[j] = speed - GRAVITY; // gravity is added back when it moves
 }
 
 /** Deterministic version of canSink, for deciding whether we're falling. */

@@ -8,7 +8,7 @@ Für Nutzer-Doku siehe `README.md`; diese Datei ist für die Weiterentwicklung.
 ```bash
 npm install          # Node ≥ 20 (entwickelt mit Node 26), Lockfile ist dabei
 npm run dev          # http://localhost:5173, auch im LAN (vite.config: host: true)
-npm test             # Vitest, aktuell 136 Tests, alle grün
+npm test             # Vitest, aktuell 138 Tests, alle grün
 npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall hostbar)
 ```
 `node_modules/` und `dist/` sind in `.gitignore`. Repo: https://github.com/MajorMaxdom/sandboxy (privat, Branch `main`). Auf neuer Maschine: `git clone` + `npm install`.
@@ -38,6 +38,9 @@ npm run build        # tsc --noEmit + vite build → dist/ (statisch, überall h
 - **Hitze-Obergrenzen:** Brennendes heizt brennbare Nachbarn höchstens auf die eigene `burn.heat`, der äußere Explosionsring höchstens auf 2000 °C. Ohne diese Grenzen schaukelten sich Stapel auf über 10.000 °C hoch.
 - **Kohle → Glut:** Kohle wird beim Brennen zu `ember` (intern), die 60–120 s bei 1100 °C glüht, Flammen aufsteigen lässt und zu Asche zerfällt. Wasser löscht Glut zurück zu Kohle.
 - **Temperatur bei Umwandlungen:** `transform()` hebt heiße Produkte auf ihre `defaultTemp` an (bzw. senkt kalte), Phasenübergänge nutzen `keepTemp = true`.
+- **Fallen mitziehen:** Fällt ein Teilchen frei, bekommt das gleichartige Teilchen direkt darüber sein Tempo (`dragAlong` in `movement.ts`). Sonst reißen gemalte Ströme in Balken auf, weil jede neue Zeile aus dem Stand startet.
+- **Frame-Budget:** `main.ts` simuliert pro Frame höchstens `SIM_BUDGET_MS` lang und verwirft den Rest, statt in eine Abwärtsspirale zu geraten. Die Statuszeile zeigt dann „Tempo … %“.
+- **Overlay** (Pinsel, Linien-/Rechteck-Vorschau) wird in den Pixelpuffer gerastert, nicht per Canvas-Pfad gezeichnet. `putImageData` gemischt mit Vektorzeichnen bremst Safari stark aus.
 - **Demos** bauen in Bruchteil-Koordinaten. Vorsicht vor Rundungslücken von einer Pixelzeile zwischen Bauteilen, die sich berühren müssen. Dafür gibt es Tests in `tests/features.test.ts` („demo behaviour“).
 - **Balancing-Werte** (kritische Masse, Brenngeschwindigkeiten, Gebläsedruck) wurden per Experiment/Test eingestellt. Nach Änderungen `npm test` laufen lassen.
 - **Neues Element:** Objekt in passender `src/elements/*.ts` ergänzen. Verweise per Key-String, die Registry wirft bei Tippfehlern. Neue Kategorie: `Category` in `types.ts` + `CATEGORIES` in `registry.ts`.

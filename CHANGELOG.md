@@ -6,6 +6,12 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 ## [Unveröffentlicht]
 
+## [0.3.1] – 2026-11-03
+
+### Behoben
+- Fallendes Wasser, Sand usw. riss beim Malen in waagerechte Balken auf: Jede neue Zeile fiel aus dem Stand los, während die darunter schon schnell war. Teilchen nehmen jetzt das Tempo des Teilchens unter ihnen mit, der Strahl bleibt geschlossen (#2).
+- Ruckeln auf dem iPhone (#1): Die Pinsel-Vorschau wird direkt ins Pixelbild gezeichnet statt per Canvas-Pfad, was Safari jeden Frame ausgebremst hat. Kommt das Gerät nicht hinterher, läuft die Simulation langsamer, statt die Bildrate einbrechen zu lassen. Die Anzeige oben zeigt dann „Tempo … %“.
+
 ## [0.3.0] – 2026-11-02
 
 ### Neu
@@ -42,7 +48,8 @@ Jede Version hat ein Git-Tag `vX.Y.Z`.
 
 Erste Version: 98 Elemente in 12 Kategorien, Temperatur, Strom und Logik, Wind, Luftdruck, Strahlung mit kritischer Masse, Leben, Undo/Redo, Speichern, Teilen-Link und 8 Demo-Szenen.
 
-[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.0...HEAD
+[Unveröffentlicht]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/MajorMaxdom/sandboxy/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/MajorMaxdom/sandboxy/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/MajorMaxdom/sandboxy/releases/tag/v0.1.0

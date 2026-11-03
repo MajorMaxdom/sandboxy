@@ -79,7 +79,7 @@ export class Renderer {
     this.buf = new Uint32Array(this.img.data.buffer);
   }
 
-  draw(sim: Simulation): void {
+  draw(sim: Simulation, overlay: Overlay | null = null): void {
     const { type, shade, temp, charge } = sim;
     const buf = this.buf;
     const colors = P.colors;
@@ -140,37 +140,67 @@ export class Renderer {
         }
       }
     }
+    if (overlay) this.drawOverlay(overlay, sim.w, sim.h);
     this.ctx.putImageData(this.img, 0, 0);
   }
 
-  /** Outline the brush or the shape being dragged, in grid coordinates. */
-  drawOverlay(o: Overlay | null): void {
-    if (!o) return;
-    const ctx = this.ctx;
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 1;
+  /**
+   * Outline the brush or the shape being dragged, in grid coordinates.
+   * Rasterised into the pixel buffer instead of drawn with canvas paths:
+   * mixing putImageData with vector drawing makes Safari sync the canvas
+   * between CPU and GPU every frame, which cost most of the frame on iPhones.
+   */
+  private drawOverlay(o: Overlay, w: number, h: number): void {
+    const buf = this.buf;
+    const blend = (x: number, y: number, a: number): void => {
+      if (x < 0 || y < 0 || x >= w || y >= h) return;
+      const i = y * w + x;
+      const c = buf[i];
+      const r = c & 255;
+      const g = (c >> 8) & 255;
+      const b = (c >> 16) & 255;
+      buf[i] = packColor(r + (255 - r) * a, g + (255 - g) * a, b + (255 - b) * a);
+    };
     if (o.kind === 'brush') {
-      ctx.beginPath();
-      ctx.arc(o.x + 0.5, o.y + 0.5, o.r + 0.5, 0, Math.PI * 2);
-      ctx.stroke();
+      // Border of the brush footprint (same shape as paintCircle).
+      const r = Math.max(0, Math.round(o.r));
+      const r2 = r * r + r;
+      const inside = (dx: number, dy: number) => dx * dx + dy * dy <= r2;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (!inside(dx, dy)) continue;
+          const edge = !inside(dx + 1, dy) || !inside(dx - 1, dy) || !inside(dx, dy + 1) || !inside(dx, dy - 1);
+          if (edge) blend(o.x + dx, o.y + dy, 0.55);
+        }
+      }
     } else if (o.kind === 'line') {
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-      ctx.lineWidth = o.r * 2 + 1;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(o.x0 + 0.5, o.y0 + 0.5);
-      ctx.lineTo(o.x1 + 0.5, o.y1 + 0.5);
-      ctx.stroke();
+      // Every cell within the brush radius of the segment.
+      const r = Math.max(0, Math.round(o.r)) + 0.5;
+      const x0 = Math.max(0, Math.floor(Math.min(o.x0, o.x1) - r));
+      const x1 = Math.min(w - 1, Math.ceil(Math.max(o.x0, o.x1) + r));
+      const y0 = Math.max(0, Math.floor(Math.min(o.y0, o.y1) - r));
+      const y1 = Math.min(h - 1, Math.ceil(Math.max(o.y0, o.y1) + r));
+      const ex = o.x1 - o.x0;
+      const ey = o.y1 - o.y0;
+      const len2 = ex * ex + ey * ey;
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((x - o.x0) * ex + (y - o.y0) * ey) / len2));
+          const dx = x - (o.x0 + ex * t);
+          const dy = y - (o.y0 + ey * t);
+          if (dx * dx + dy * dy <= r * r) blend(x, y, 0.35);
+        }
+      }
     } else {
-      const x = Math.min(o.x0, o.x1);
-      const y = Math.min(o.y0, o.y1);
-      const w = Math.abs(o.x1 - o.x0) + 1;
-      const h = Math.abs(o.y1 - o.y0) + 1;
-      ctx.fillRect(x, y, w, h);
-      ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+      const xa = Math.min(o.x0, o.x1);
+      const xb = Math.max(o.x0, o.x1);
+      const ya = Math.min(o.y0, o.y1);
+      const yb = Math.max(o.y0, o.y1);
+      for (let y = Math.max(0, ya); y <= Math.min(h - 1, yb); y++) {
+        for (let x = Math.max(0, xa); x <= Math.min(w - 1, xb); x++) {
+          blend(x, y, x === xa || x === xb || y === ya || y === yb ? 0.55 : 0.25);
+        }
+      }
     }
-    ctx.restore();
   }
 }

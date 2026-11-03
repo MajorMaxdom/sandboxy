@@ -407,7 +407,11 @@ function overlay(): Overlay | null {
 }
 
 const TICK_RATE = 60;
+/** Milliseconds per frame the simulation may use before it falls behind. */
+const SIM_BUDGET_MS = 12;
 let acc = 0;
+/** Ticks simulated since the last stats update. */
+let ticks = 0;
 let last = performance.now();
 let frames = 0;
 let fpsTime = last;
@@ -433,13 +437,20 @@ function frame(now: number): void {
 
   if (!paused) {
     acc += dt * TICK_RATE * speed;
-    let n = 0;
-    while (acc >= 1 && n < 8) {
+    // Catch up on missed ticks, but only within a time budget: on a slow
+    // device, catching up makes the frame longer, which leaves even more to
+    // catch up next frame, until the frame rate collapses. Better to let the
+    // simulation run slower than real time and keep the screen smooth.
+    const t0 = performance.now();
+    while (acc >= 1) {
       sim.step();
       acc -= 1;
-      n++;
+      ticks++;
+      if (performance.now() - t0 > SIM_BUDGET_MS) {
+        acc = 0;
+        break;
+      }
     }
-    if (n === 8) acc = 0; // can't keep up; drop the backlog instead of spiralling
   } else {
     acc = 0;
     while (stepRequests > 0) {
@@ -448,17 +459,20 @@ function frame(now: number): void {
     }
   }
 
-  renderer.draw(sim);
-  renderer.drawOverlay(overlay());
+  renderer.draw(sim, overlay());
   updateHud();
 
   frames++;
   if (now - fpsTime >= 500) {
     fps = Math.round((frames * 1000) / (now - fpsTime));
+    // Show how fast the world runs when the device can't keep up.
+    const rate = ticks / ((now - fpsTime) / 1000) / (TICK_RATE * speed);
+    const slow = !paused && rate < 0.9 ? ` · Tempo ${Math.round(rate * 100)} %` : '';
     frames = 0;
+    ticks = 0;
     fpsTime = now;
     const zoom = view.zoom > 1 ? ` · Zoom ${view.zoom.toFixed(1).replace('.', ',')}×` : '';
-    statsEl.textContent = `${fps} FPS · ${sim.countParticles().toLocaleString('de-DE')} Partikel · ${sim.w}×${sim.h}${zoom}`;
+    statsEl.textContent = `${fps} FPS${slow} · ${sim.countParticles().toLocaleString('de-DE')} Partikel · ${sim.w}×${sim.h}${zoom}`;
   }
 
   requestAnimationFrame(frame);
